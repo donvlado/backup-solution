@@ -176,6 +176,8 @@ Resources:
       SubnetId: !Ref PublicSubnet1
 
   ServersLaunchTemplateDB:
+    #checkov:skip=CKV_AWS_79:Recurso demo entregado desactivado (D-09), reemplazado por recursos propios; no se despliega
+    #checkov:skip=CKV_AWS_88:Recurso demo entregado desactivado (D-09), reemplazado por recursos propios; no se despliega
     Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateName: aws-backup-demo-resource-db
@@ -222,6 +224,8 @@ Resources:
             Value: !Ref ApplicationOwner
 
   ServersLaunchTemplateWebServer:
+    #checkov:skip=CKV_AWS_79:Recurso demo entregado desactivado (D-09), reemplazado por recursos propios; no se despliega
+    #checkov:skip=CKV_AWS_88:Recurso demo entregado desactivado (D-09), reemplazado por recursos propios; no se despliega
     Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateName: aws-backup-demo-resource-web
@@ -268,6 +272,8 @@ Resources:
             Value: !Ref ApplicationOwner
 
   ServersLaunchTemplateAppServer:
+    #checkov:skip=CKV_AWS_79:Recurso demo entregado desactivado (D-09), reemplazado por recursos propios; no se despliega
+    #checkov:skip=CKV_AWS_88:Recurso demo entregado desactivado (D-09), reemplazado por recursos propios; no se despliega
     Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateName: aws-backup-demo-resource-app

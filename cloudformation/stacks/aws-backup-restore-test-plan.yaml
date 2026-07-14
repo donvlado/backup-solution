@@ -76,6 +76,7 @@ Parameters:
 
 Resources:
   AWSBackupRestoreTestingRole:
+    #checkov:skip=CKV_AWS_111:Restore-testing retirado (D-07), comentado en el pipeline (D-10); no se despliega
     Type: "AWS::IAM::Role"
     Properties:
       Description: Allows AWS Backup to access AWS services for restore testing.

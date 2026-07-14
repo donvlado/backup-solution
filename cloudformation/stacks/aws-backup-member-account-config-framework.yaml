@@ -89,20 +89,27 @@ Parameters:
     Default: Example Application
 
 Conditions:
-  DeployControl1Condition: !Equals [ !Ref DeployControl1, "true" ]
-  DeployControl2Condition: !Equals [ !Ref DeployControl2, "true" ]
-  DeployControl3Condition: !Equals [ !Ref DeployControl3, "true" ]
-  DeployControl4Condition: !Equals [ !Ref DeployControl4, "true" ]
-  DeployControl5Condition: !Equals [ !Ref DeployControl5, "true" ]
-  DeployControl6Condition: !Equals [ !Ref DeployControl6, "true" ]
-  DeployControl7Condition: !Equals [ !Ref DeployControl7, "true" ]
-  DeployControl8Condition: !Equals [ !Ref DeployControl8, "true" ]
-  DeployControl9Condition: !Equals [ !Ref DeployControl9, "true" ]
-  DeployControl10Condition: !Equals [ !Ref DeployControl10, "true" ]
-  DeployConfigurationRecorderCondition: !Equals [ !Ref DeployConfigurationRecorder, "true" ]
+  DeployControl1Condition: !Equals [ !Ref DeployControl1, "yes" ]
+  DeployControl2Condition: !Equals [ !Ref DeployControl2, "yes" ]
+  DeployControl3Condition: !Equals [ !Ref DeployControl3, "yes" ]
+  DeployControl4Condition: !Equals [ !Ref DeployControl4, "yes" ]
+  DeployControl5Condition: !Equals [ !Ref DeployControl5, "yes" ]
+  DeployControl6Condition: !Equals [ !Ref DeployControl6, "yes" ]
+  DeployControl7Condition: !Equals [ !Ref DeployControl7, "yes" ]
+  DeployControl8Condition: !Equals [ !Ref DeployControl8, "yes" ]
+  DeployControl9Condition: !Equals [ !Ref DeployControl9, "yes" ]
+  DeployControl10Condition: !Equals [ !Ref DeployControl10, "yes" ]
+  DeployConfigurationRecorderCondition: !Equals [ !Ref DeployConfigurationRecorder, "yes" ]
 
 Resources:
   rConfigBucket:
+    # [Skips checkov 2026-07-13 — bucket interno del Config recorder; ver security-review/security-scan-report.md §4.a]
+    #checkov:skip=CKV_AWS_18:Access logging al bucket central de logs del cliente (Log Archive), configurado en el deploy productivo
+    #checkov:skip=CKV_AWS_21:Versioning se habilita en la entrega productiva
+    #checkov:skip=CKV_AWS_53:Bucket interno; PublicAccessBlock = remediación de entrega productiva
+    #checkov:skip=CKV_AWS_54:Bucket interno; PublicAccessBlock = remediación de entrega productiva
+    #checkov:skip=CKV_AWS_55:Bucket interno; PublicAccessBlock = remediación de entrega productiva
+    #checkov:skip=CKV_AWS_56:Bucket interno; PublicAccessBlock = remediación de entrega productiva
     Condition: DeployConfigurationRecorderCondition
     DeletionPolicy: Retain
     Type: AWS::S3::Bucket

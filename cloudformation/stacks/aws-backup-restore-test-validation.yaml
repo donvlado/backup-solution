@@ -41,6 +41,7 @@ Parameters:
 Resources:
   # IAM Role for the Lambda function
   AWSBackupRestoreTestValidationLambdaExecutionRole:
+    #checkov:skip=CKV_AWS_111:Restore-testing retirado (D-07), comentado en el pipeline (D-10); no se despliega
     Type: "AWS::IAM::Role"
     Properties:
       AssumeRolePolicyDocument:
@@ -81,6 +82,9 @@ Resources:
 
   # Lambda Function Definition
   RestoreTestingValidationLambda:
+    #checkov:skip=CKV_AWS_115:Restore-testing retirado (D-07), comentado en el pipeline (D-10); no se despliega
+    #checkov:skip=CKV_AWS_116:Restore-testing retirado (D-07), comentado en el pipeline (D-10); no se despliega
+    #checkov:skip=CKV_AWS_117:Restore-testing retirado (D-07), comentado en el pipeline (D-10); no se despliega
     Type: "AWS::Lambda::Function"
     Properties:
       FunctionName: "RestoreTestingValidation"

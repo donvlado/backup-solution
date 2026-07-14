@@ -30,19 +30,36 @@ Metadata:
       - AWSBackupCentralAccountId
       - AWSBackupCentralAccountRegion
     - Label:
-        default: "Restore Testing Configuration - Plan"
+        default: "Backup Plan Configuration"
       Parameters:
-      - RestoreTestSchedule
-      - SelectionWindowDays
-      - StartWindowHours
-    - Label:
-        default: "Restore Testing Selection - EC2"
-      Parameters:
-      - RestoreSubnetEC2
-      - RestoreSecurityGroupIdEC2
-      - RestoreValidationHoursEC2
-      - TagKey
-      - TagValue
+      - DailyBackupSchedule
+      - WeeklyBackupSchedule
+      - MonthlyBackupSchedule
+      - AnnualBackupSchedule
+      - DailyRetentionDays
+      - WeeklyRetentionDays
+      - MonthlyRetentionDays
+      - AnnualRetentionDays
+      - ColdStorageAfterDays
+      - OperationalTagKey
+      - OperationalTagValue
+      - ComplianceTagKey
+      - ComplianceTagValue
+    # Diferido — demo primer borrador (ver activity-log D-09/D-10): restore testing retirado por costo.
+    # - Label:
+    #     default: "Restore Testing Configuration - Plan"
+    #   Parameters:
+    #   - RestoreTestSchedule
+    #   - SelectionWindowDays
+    #   - StartWindowHours
+    # - Label:
+    #     default: "Restore Testing Selection - EC2"
+    #   Parameters:
+    #   - RestoreSubnetEC2
+    #   - RestoreSecurityGroupIdEC2
+    #   - RestoreValidationHoursEC2
+    #   - TagKey
+    #   - TagValue
     - Label:
         default: "Customer Specific Tags"
       Parameters:
@@ -73,14 +90,15 @@ Metadata:
       - DeployBackupJobReportPlan
       - DeployCopyJobReportPlan
       - DeployRestoreJobReportPlan
-    - Label:
-        default: "Demo Resources"
-      Parameters:
-      - AWSBackupDemoEC2InstanceType
-      - AWSBackupDemoVPCCIDR
-      - AWSBackupDemoSubnetCIDR
-      - AWSBackupDemoTagKey
-      - AWSBackupDemoTagValue
+    # Diferido — demo primer borrador (ver activity-log D-09): Vlad levanta sus propios recursos en su Org.
+    # - Label:
+    #     default: "Demo Resources"
+    #   Parameters:
+    #   - AWSBackupDemoEC2InstanceType
+    #   - AWSBackupDemoVPCCIDR
+    #   - AWSBackupDemoSubnetCIDR
+    #   - AWSBackupDemoTagKey
+    #   - AWSBackupDemoTagValue
     - Label:
         default: "AWS Config Configuration Recorder"
       Parameters:
@@ -123,33 +141,61 @@ Metadata:
         default: "Application Owner"
       Application:
         default: "Application Name"
-      RestoreTestSchedule:
-        default: "Restore Test Schedule (CRON)"
-      RestoreSubnetEC2:
-        default: "Restore Subnet for EC2"
-      RestoreSecurityGroupIdEC2:
-        default: "Restore Security Group ID to use for EC2"
-      RestoreValidationHoursEC2:
-        default: "Restore Validation Duration Time (Hours)"
-      SelectionWindowDays:
-        default: "Recovery Points Selection Window (Days)"
-      StartWindowHours:
-        default: "Restore Testing Start Window (Hours)"
-      TagKey:
-        default: "Resource Point Selection Tag Key"
-      TagValue:
-        default: "Resource Point Selection Tag Value"
+      DailyBackupSchedule:
+        default: "Daily Backup Schedule (CRON)"
+      WeeklyBackupSchedule:
+        default: "Weekly Backup Schedule (CRON)"
+      MonthlyBackupSchedule:
+        default: "Monthly Backup Schedule (CRON)"
+      AnnualBackupSchedule:
+        default: "Annual Backup Schedule (CRON)"
+      DailyRetentionDays:
+        default: "Daily Retention (Days)"
+      WeeklyRetentionDays:
+        default: "Weekly Retention (Days)"
+      MonthlyRetentionDays:
+        default: "Monthly Retention (Days)"
+      AnnualRetentionDays:
+        default: "Annual Retention (Days)"
+      ColdStorageAfterDays:
+        default: "Move to Cold Storage After (Days) - monthly/annual only"
+      OperationalTagKey:
+        default: "Operational Selection Tag Key"
+      OperationalTagValue:
+        default: "Operational Selection Tag Value"
+      ComplianceTagKey:
+        default: "Compliance Selection Tag Key"
+      ComplianceTagValue:
+        default: "Compliance Selection Tag Value"
 
-      AWSBackupDemoEC2InstanceType:
-        default: "Demo EC2 Instance Type"
-      AWSBackupDemoVPCCIDR:
-        default: "Demo VPC CIDR Block"
-      AWSBackupDemoSubnetCIDR:
-        default: "Demo Subnet CIDR Block"
-      AWSBackupDemoTagKey:
-        default: "Tag Key for AWS Backup"
-      AWSBackupDemoTagValue:
-        default: "Tag Value for AWS Backup"
+    # Diferido — demo primer borrador (ver activity-log D-09/D-10):
+    #   RestoreTestSchedule:
+    #     default: "Restore Test Schedule (CRON)"
+    #   RestoreSubnetEC2:
+    #     default: "Restore Subnet for EC2"
+    #   RestoreSecurityGroupIdEC2:
+    #     default: "Restore Security Group ID to use for EC2"
+    #   RestoreValidationHoursEC2:
+    #     default: "Restore Validation Duration Time (Hours)"
+    #   SelectionWindowDays:
+    #     default: "Recovery Points Selection Window (Days)"
+    #   StartWindowHours:
+    #     default: "Restore Testing Start Window (Hours)"
+    #   TagKey:
+    #     default: "Resource Point Selection Tag Key"
+    #   TagValue:
+    #     default: "Resource Point Selection Tag Value"
+
+    #   AWSBackupDemoEC2InstanceType:
+    #     default: "Demo EC2 Instance Type"
+    #   AWSBackupDemoVPCCIDR:
+    #     default: "Demo VPC CIDR Block"
+    #   AWSBackupDemoSubnetCIDR:
+    #     default: "Demo Subnet CIDR Block"
+    #   AWSBackupDemoTagKey:
+    #     default: "Tag Key for AWS Backup"
+    #   AWSBackupDemoTagValue:
+    #     default: "Tag Value for AWS Backup"
 
       DeployControl1:
         default: "Control #1-Backup resources are included in at least one backup plan"
@@ -238,56 +284,112 @@ Parameters:
     Type: String
     Description: The region for the central account that will be the secondary store for all AWS Backups. Secondary copies and restore testing will be in this region.
 
-  RestoreTestSchedule:
-    Description: The CRON job to initiate restore test plan. For example, cron(0 7 ? * 6 *) weekly on Saturday, at 07:00 UTC.
+  # --- Backup Plan Configuration (alimenta los SSM Parameters que consume el org-policy) ---
+  DailyBackupSchedule:
+    Description: CRON del backup diario (operativo). Ej. cron(0 5 ? * * *).
     Type: String
-    Default: cron(0 7 ? * 6 *)
-  RestoreSubnetEC2:
-    Description: The restore subnet for EC2 restore testing.
+    Default: cron(0 5 ? * * *)
+  WeeklyBackupSchedule:
+    Description: CRON del backup semanal (operativo). Ej. cron(0 5 ? * 1 *) (domingos 05:00 UTC).
     Type: String
-  RestoreSecurityGroupIdEC2:
-    Description: The restore security group IDs for EC2 restore testing.
+    Default: cron(0 5 ? * 1 *)
+  MonthlyBackupSchedule:
+    Description: CRON del backup mensual (operativo). Ej. cron(0 5 1 * ? *) (1° de mes 05:00 UTC).
     Type: String
-  RestoreValidationHoursEC2:
-    Description: The number of hours to keep the EC2 instance active for restore validation.
+    Default: cron(0 5 1 * ? *)
+  AnnualBackupSchedule:
+    Description: CRON del backup anual (compliance). Ej. cron(0 5 1 1 ? *) (1° de enero 05:00 UTC).
     Type: String
-    Default: 1
-  SelectionWindowDays:
-    Description: The number of days to select recovery points.
-    Type: Number
-    Default: 365
-  StartWindowHours:
-    Description: The number of hours for the restore testing start window.
-    Type: Number
-    Default: 1
-  TagKey:
-    Description: The tag key used for selecting resources. For example, "backup".
+    Default: cron(0 5 1 1 ? *)
+  DailyRetentionDays:
+    Description: Retencion del tier diario (dias).
     Type: String
-    Default: "backup"
-  TagValue:
-    Description: The tag value used for selecting resources. For example, "daily".
+    Default: '35'
+  WeeklyRetentionDays:
+    Description: Retencion del tier semanal (dias).
     Type: String
-    Default: "daily"
-  AWSBackupDemoEC2InstanceType:
-    Description: The instance type for demo EC2 instances
+    Default: '90'
+  MonthlyRetentionDays:
+    Description: Retencion del tier mensual (dias).
     Type: String
-    Default: "t3.nano" # Replace with your default value or remove Default to require user input
-  AWSBackupDemoVPCCIDR:
-    Description: The CIDR for demo VPC
+    Default: '365'
+  AnnualRetentionDays:
+    Description: Retencion del tier anual/compliance (dias). CNV = 2555 (7 anios).
     Type: String
-    Default: "10.0.0.0/16" # Replace with your default value or remove Default to require user input
-  AWSBackupDemoSubnetCIDR:
-    Description: The CIDR for demo subnet
+    Default: '2555'
+  ColdStorageAfterDays:
+    Description: Dias hasta transicionar a cold (Archive). Solo monthly/annual (AWS exige delete_after >= cold + 90).
     Type: String
-    Default: "10.0.1.0/24" # Replace with your default value or remove Default to require user input
-  AWSBackupDemoTagKey:
-    Description: The tag key to apply to demo resources - align to AWS Backup policy
+    Default: '30'
+  OperationalTagKey:
+    Description: Tag key de seleccion de la cobertura operativa base.
     Type: String
-    Default: "backup" # Replace with your default value or remove Default to require user input
-  AWSBackupDemoTagValue:
-    Description: The tag value to apply to demo resources - align to AWS Backup policy
+    Default: backup
+  OperationalTagValue:
+    Description: Tag value de seleccion de la cobertura operativa base.
     Type: String
-    Default: "daily" # Replace with your default value or remove Default to require user input
+    Default: 'yes'
+  ComplianceTagKey:
+    Description: Tag key de seleccion del subconjunto regulado (tier anual/compliance).
+    Type: String
+    Default: data-class
+  ComplianceTagValue:
+    Description: Tag value de seleccion del subconjunto regulado (tier anual/compliance).
+    Type: String
+    Default: regulated
+
+  # Diferido — demo primer borrador (ver activity-log D-09/D-10): restore testing retirado por costo,
+  # demo resources reemplazados por recursos propios en la Org de Vlad. Se conservan comentados.
+  # RestoreTestSchedule:
+  #   Description: The CRON job to initiate restore test plan. For example, cron(0 7 ? * 6 *) weekly on Saturday, at 07:00 UTC.
+  #   Type: String
+  #   Default: cron(0 7 ? * 6 *)
+  # RestoreSubnetEC2:
+  #   Description: The restore subnet for EC2 restore testing.
+  #   Type: String
+  # RestoreSecurityGroupIdEC2:
+  #   Description: The restore security group IDs for EC2 restore testing.
+  #   Type: String
+  # RestoreValidationHoursEC2:
+  #   Description: The number of hours to keep the EC2 instance active for restore validation.
+  #   Type: String
+  #   Default: 1
+  # SelectionWindowDays:
+  #   Description: The number of days to select recovery points.
+  #   Type: Number
+  #   Default: 365
+  # StartWindowHours:
+  #   Description: The number of hours for the restore testing start window.
+  #   Type: Number
+  #   Default: 1
+  # TagKey:
+  #   Description: The tag key used for selecting resources. For example, "backup".
+  #   Type: String
+  #   Default: "backup"
+  # TagValue:
+  #   Description: The tag value used for selecting resources. For example, "daily".
+  #   Type: String
+  #   Default: "daily"
+  # AWSBackupDemoEC2InstanceType:
+  #   Description: The instance type for demo EC2 instances
+  #   Type: String
+  #   Default: "t3.nano"
+  # AWSBackupDemoVPCCIDR:
+  #   Description: The CIDR for demo VPC
+  #   Type: String
+  #   Default: "10.0.0.0/16"
+  # AWSBackupDemoSubnetCIDR:
+  #   Description: The CIDR for demo subnet
+  #   Type: String
+  #   Default: "10.0.1.0/24"
+  # AWSBackupDemoTagKey:
+  #   Description: The tag key to apply to demo resources - align to AWS Backup policy
+  #   Type: String
+  #   Default: "backup"
+  # AWSBackupDemoTagValue:
+  #   Description: The tag value to apply to demo resources - align to AWS Backup policy
+  #   Type: String
+  #   Default: "daily"
 
   BusinessUnit:
     Description: Business Unit Name
@@ -445,7 +547,9 @@ Parameters:
     Default: no
 
 Conditions:
-  DeployReportFeatureCondition: !Equals [ !Ref DeployReportFeature, "true" ]
+  # Molinos: corregido "true" -> "yes" (los AllowedValues del parametro son yes/no; con "true" el
+  # condition nunca daba verdadero y los report plans no se desplegaban). Reports on para la demo.
+  DeployReportFeatureCondition: !Equals [ !Ref DeployReportFeature, "yes" ]
 
 Resources:
   AWSBackupOrgId:
@@ -546,13 +650,14 @@ Resources:
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
 
-  RestoreTestScheduleParameter:
+  # --- SSM Parameters del Backup Plan (consumidos por aws-backup-org-policy.yaml) ---
+  DailyBackupScheduleParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: The CRON job to initiate restore test plan.
-      Name: "/backup/testing/restore-test-schedule"
+      Description: CRON del backup diario (operativo).
+      Name: "/backup/schedule/daily"
       Type: String
-      Value: !Ref RestoreTestSchedule
+      Value: !Ref DailyBackupSchedule
       Tags:
         Application: !Ref Application
         BusinessUnit: !Ref BusinessUnit
@@ -560,13 +665,13 @@ Resources:
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
 
-  RestoreSubnetEC2Parameter:
+  WeeklyBackupScheduleParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: The restore subnet for EC2 restore testing.
-      Name: "/backup/testing/ec2/subnetId"
+      Description: CRON del backup semanal (operativo).
+      Name: "/backup/schedule/weekly"
       Type: String
-      Value: !Ref RestoreSubnetEC2
+      Value: !Ref WeeklyBackupSchedule
       Tags:
         Application: !Ref Application
         BusinessUnit: !Ref BusinessUnit
@@ -574,13 +679,13 @@ Resources:
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
 
-  RestoreSecurityGroupIdEC2Parameter:
+  MonthlyBackupScheduleParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: The restore security group IDs for EC2 restore testing.
-      Name: "/backup/testing/ec2/securityGroupIds"
+      Description: CRON del backup mensual (operativo).
+      Name: "/backup/schedule/monthly"
       Type: String
-      Value: !Ref RestoreSecurityGroupIdEC2
+      Value: !Ref MonthlyBackupSchedule
       Tags:
         Application: !Ref Application
         BusinessUnit: !Ref BusinessUnit
@@ -588,13 +693,13 @@ Resources:
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
 
-  RestoreValidationHoursEC2Parameter:
+  AnnualBackupScheduleParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: The number of hours to keep the EC2 instance active for restore testing validation.
-      Name: "/backup/testing/ec2/validation-window-hours"
+      Description: CRON del backup anual (compliance).
+      Name: "/backup/schedule/annual"
       Type: String
-      Value: !Ref RestoreValidationHoursEC2
+      Value: !Ref AnnualBackupSchedule
       Tags:
         Application: !Ref Application
         BusinessUnit: !Ref BusinessUnit
@@ -602,13 +707,13 @@ Resources:
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
 
-  SelectionWindowDaysParameter:
+  DailyRetentionDaysParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: The number of days to select recovery points.
-      Name: "/backup/testing/selection-window-days"
+      Description: Retencion del tier diario (dias).
+      Name: "/backup/retention/daily"
       Type: String
-      Value: !Ref SelectionWindowDays
+      Value: !Ref DailyRetentionDays
       Tags:
         Application: !Ref Application
         BusinessUnit: !Ref BusinessUnit
@@ -616,13 +721,13 @@ Resources:
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
 
-  StartWindowHoursParameter:
+  WeeklyRetentionDaysParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: The number of hours for the restore testing start window.
-      Name: "/backup/testing/start-window-hours"
+      Description: Retencion del tier semanal (dias).
+      Name: "/backup/retention/weekly"
       Type: String
-      Value: !Ref StartWindowHours
+      Value: !Ref WeeklyRetentionDays
       Tags:
         Application: !Ref Application
         BusinessUnit: !Ref BusinessUnit
@@ -630,13 +735,13 @@ Resources:
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
 
-  TagKeyParameter:
+  MonthlyRetentionDaysParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: The tag key used for selecting resources.
-      Name: "/backup/testing/ec2/tag-key"
+      Description: Retencion del tier mensual (dias).
+      Name: "/backup/retention/monthly"
       Type: String
-      Value: !Ref TagKey
+      Value: !Ref MonthlyRetentionDays
       Tags:
         Application: !Ref Application
         BusinessUnit: !Ref BusinessUnit
@@ -644,19 +749,95 @@ Resources:
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
 
-  TagValueParameter:
+  AnnualRetentionDaysParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: The tag value used for selecting resources.
-      Name: "/backup/testing/ec2/tag-value"
+      Description: Retencion del tier anual/compliance (dias). CNV = 2555 (7 anios).
+      Name: "/backup/retention/annual"
       Type: String
-      Value: !Ref TagValue
+      Value: !Ref AnnualRetentionDays
       Tags:
         Application: !Ref Application
         BusinessUnit: !Ref BusinessUnit
         CostCenter: !Ref CostCenter
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
+
+  ColdStorageAfterDaysParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Dias hasta transicionar a cold (Archive). Solo monthly/annual.
+      Name: "/backup/lifecycle/cold-after-days"
+      Type: String
+      Value: !Ref ColdStorageAfterDays
+      Tags:
+        Application: !Ref Application
+        BusinessUnit: !Ref BusinessUnit
+        CostCenter: !Ref CostCenter
+        Environment: !Ref Environment
+        ApplicationOwner: !Ref ApplicationOwner
+
+  OperationalTagKeyParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Tag key de seleccion de la cobertura operativa base.
+      Name: "/backup/selection/operational-tag-key"
+      Type: String
+      Value: !Ref OperationalTagKey
+      Tags:
+        Application: !Ref Application
+        BusinessUnit: !Ref BusinessUnit
+        CostCenter: !Ref CostCenter
+        Environment: !Ref Environment
+        ApplicationOwner: !Ref ApplicationOwner
+
+  OperationalTagValueParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Tag value de seleccion de la cobertura operativa base.
+      Name: "/backup/selection/operational-tag-value"
+      Type: String
+      Value: !Ref OperationalTagValue
+      Tags:
+        Application: !Ref Application
+        BusinessUnit: !Ref BusinessUnit
+        CostCenter: !Ref CostCenter
+        Environment: !Ref Environment
+        ApplicationOwner: !Ref ApplicationOwner
+
+  ComplianceTagKeyParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Tag key de seleccion del subconjunto regulado (tier anual/compliance).
+      Name: "/backup/selection/compliance-tag-key"
+      Type: String
+      Value: !Ref ComplianceTagKey
+      Tags:
+        Application: !Ref Application
+        BusinessUnit: !Ref BusinessUnit
+        CostCenter: !Ref CostCenter
+        Environment: !Ref Environment
+        ApplicationOwner: !Ref ApplicationOwner
+
+  ComplianceTagValueParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Tag value de seleccion del subconjunto regulado (tier anual/compliance).
+      Name: "/backup/selection/compliance-tag-value"
+      Type: String
+      Value: !Ref ComplianceTagValue
+      Tags:
+        Application: !Ref Application
+        BusinessUnit: !Ref BusinessUnit
+        CostCenter: !Ref CostCenter
+        Environment: !Ref Environment
+        ApplicationOwner: !Ref ApplicationOwner
+
+  # Diferido — demo primer borrador (ver activity-log D-09/D-10): SSM params de restore testing
+  # comentados (restore testing retirado por costo). Rutas originales: /backup/testing/restore-test-schedule,
+  # /backup/testing/ec2/subnetId, /backup/testing/ec2/securityGroupIds, /backup/testing/ec2/validation-window-hours,
+  # /backup/testing/selection-window-days, /backup/testing/start-window-hours, /backup/testing/ec2/tag-key,
+  # /backup/testing/ec2/tag-value. Alimentaban los stacksets de restore testing (tambien comentados en el pipeline).
 
   AWSBackupTargetGlobalRegion:
     Type: AWS::SSM::Parameter
@@ -714,75 +895,9 @@ Resources:
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
 
-  DemoEC2InstanceType:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: The instance type for demo EC2 instances
-      Name: "/backup/demo/ec2-instance-type"
-      Type: String
-      Value: !Ref AWSBackupDemoEC2InstanceType
-      Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
-
-  DemoVPCCIDR:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: The CIDR for the demo VPC
-      Name: "/backup/demo/vpc-cidr"
-      Type: String
-      Value: !Ref AWSBackupDemoVPCCIDR
-      Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
-
-  DemoSubnetCIDR:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: The CIDR for demo subnet
-      Name: "/backup/demo/subnet-cidr"
-      Type: String
-      Value: !Ref AWSBackupDemoSubnetCIDR
-      Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
-
-  DemoTagKey:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: The tag key to apply to demo resources - align to AWS Backup policy
-      Name: "/backup/demo/tag-key"
-      Type: String
-      Value: !Ref AWSBackupDemoTagKey
-      Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
-
-  DemoTagValue:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: The tag value to apply to demo resources - align to AWS Backup policy
-      Name: "/backup/demo/tag-value"
-      Type: String
-      Value: !Ref AWSBackupDemoTagValue
-      Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+  # Diferido — demo primer borrador (ver activity-log D-09): SSM params de demo resources comentados.
+  # Vlad levanta sus propios recursos en su Org. Rutas originales: /backup/demo/ec2-instance-type,
+  # /backup/demo/vpc-cidr, /backup/demo/subnet-cidr, /backup/demo/tag-key, /backup/demo/tag-value.
 
   AWSBackupFrameworkControl2:
     Type: AWS::SSM::Parameter
@@ -1001,6 +1116,15 @@ Resources:
 
   DeploymentBucket:
     Type: "AWS::S3::Bucket"
+    # [Skips checkov documentados 2026-07-13 — ver security-review/security-scan-report.md §4.a.
+    #  Bucket INTERNO de artefactos del pipeline; la DeploymentBucketPolicy (abajo) ya deniega ACLs
+    #  públicas (DenyS3PublicObjectACL), restringe por aws:PrincipalOrgPaths y fuerza TLS. Las
+    #  remediaciones (PublicAccessBlock, access logging) son de entrega productiva, no del demo.]
+    #checkov:skip=CKV_AWS_18:Access logging al bucket central de logs del cliente (Log Archive), configurado en el deploy productivo
+    #checkov:skip=CKV_AWS_53:Bucket interno; bucket policy ya deniega ACLs públicas + PrincipalOrgPaths + TLS. PublicAccessBlock = remediación productiva
+    #checkov:skip=CKV_AWS_54:Bucket interno; bucket policy ya deniega ACLs públicas + PrincipalOrgPaths + TLS. PublicAccessBlock = remediación productiva
+    #checkov:skip=CKV_AWS_55:Bucket interno; bucket policy ya deniega ACLs públicas + PrincipalOrgPaths + TLS. PublicAccessBlock = remediación productiva
+    #checkov:skip=CKV_AWS_56:Bucket interno; bucket policy ya deniega ACLs públicas + PrincipalOrgPaths + TLS. PublicAccessBlock = remediación productiva
     Properties:
       #      BucketEncryption:
       #        ServerSideEncryptionConfiguration:
@@ -1160,7 +1284,7 @@ Resources:
             Owner: !Ref GitHubUsername # The owner of the forked repository
             Repo: !Ref GitHubRepo # The name of the forked repository
             Branch: !Ref GitHubBranch # The branch you want to track in the forked repo
-            OAuthToken: !Ref GitHubPersonalAccessToken
+            OAuthToken: !Ref GitHubPersonalAccessToken  # pragma: allowlist secret — referencia CFN a param NoEcho, no un secreto hardcodeado
           OutputArtifacts:
           - Name: SourceArtifacts
           Namespace: SourceVariables
@@ -1214,46 +1338,45 @@ Resources:
                 "CommitId": "#{SourceVariables.CommitId}"
               }
           RunOrder: 1
-        - InputArtifacts:
-          - Name: SourceArtifacts
-          Name: Deploy_RestoreTestPlan
-          ActionTypeId:
-            Category: Deploy
-            Owner: AWS
-            Version: '1'
-            Provider: CloudFormation
-          Configuration:
-            ActionMode: CREATE_UPDATE
-            StackName: stackset-aws-backup-restore-test-plan
-            RoleArn: !GetAtt CloudFormationRole.Arn
-            Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
-            TemplatePath: SourceArtifacts::cloudformation/stacksets/stackset-aws-backup-restore-test-plan.yaml
-            ParameterOverrides: |
-              {
-                "CommitId": "#{SourceVariables.CommitId}"
-              }
-
-          RunOrder: 2
-        - InputArtifacts:
-          - Name: SourceArtifacts
-          Name: Deploy_RestoreTestValidation
-          ActionTypeId:
-            Category: Deploy
-            Owner: AWS
-            Version: '1'
-            Provider: CloudFormation
-          Configuration:
-            ActionMode: CREATE_UPDATE
-            StackName: stackset-aws-backup-restore-test-validation
-            RoleArn: !GetAtt CloudFormationRole.Arn
-            Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
-            TemplatePath: SourceArtifacts::cloudformation/stacksets/stackset-aws-backup-restore-test-validation.yaml
-            ParameterOverrides: |
-              {
-                "CommitId": "#{SourceVariables.CommitId}"
-              }
-
-          RunOrder: 3
+        # Diferido — demo primer borrador (ver activity-log D-09/D-10): restore testing retirado por costo.
+        # - InputArtifacts:
+        #   - Name: SourceArtifacts
+        #   Name: Deploy_RestoreTestPlan
+        #   ActionTypeId:
+        #     Category: Deploy
+        #     Owner: AWS
+        #     Version: '1'
+        #     Provider: CloudFormation
+        #   Configuration:
+        #     ActionMode: CREATE_UPDATE
+        #     StackName: stackset-aws-backup-restore-test-plan
+        #     RoleArn: !GetAtt CloudFormationRole.Arn
+        #     Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
+        #     TemplatePath: SourceArtifacts::cloudformation/stacksets/stackset-aws-backup-restore-test-plan.yaml
+        #     ParameterOverrides: |
+        #       {
+        #         "CommitId": "#{SourceVariables.CommitId}"
+        #       }
+        #   RunOrder: 2
+        # - InputArtifacts:
+        #   - Name: SourceArtifacts
+        #   Name: Deploy_RestoreTestValidation
+        #   ActionTypeId:
+        #     Category: Deploy
+        #     Owner: AWS
+        #     Version: '1'
+        #     Provider: CloudFormation
+        #   Configuration:
+        #     ActionMode: CREATE_UPDATE
+        #     StackName: stackset-aws-backup-restore-test-validation
+        #     RoleArn: !GetAtt CloudFormationRole.Arn
+        #     Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
+        #     TemplatePath: SourceArtifacts::cloudformation/stacksets/stackset-aws-backup-restore-test-validation.yaml
+        #     ParameterOverrides: |
+        #       {
+        #         "CommitId": "#{SourceVariables.CommitId}"
+        #       }
+        #   RunOrder: 3
       - Name: DeployBackupRecoveryMemberAccounts
         Actions:
         - InputArtifacts:
@@ -1363,30 +1486,38 @@ Resources:
             RunOrder: 1
         - !Ref "AWS::NoValue"
 
-      - Name: DeployDemoResources
-        Actions:
-        - InputArtifacts:
-          - Name: SourceArtifacts
-          Name: Deploy_DemoResources
-          ActionTypeId:
-            Category: Deploy
-            Owner: AWS
-            Version: '1'
-            Provider: CloudFormation
-          Configuration:
-            ActionMode: REPLACE_ON_FAILURE
-            StackName: stackset-aws-backup-demo-resources
-            RoleArn: !GetAtt CloudFormationRole.Arn
-            Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
-            TemplatePath: SourceArtifacts::cloudformation/stacksets/stackset-aws-backup-demo-resources.yaml
-            ParameterOverrides: |
-              {
-                "CommitId": "#{SourceVariables.CommitId}"
-              }
-          RunOrder: 1
+      # Diferido — demo primer borrador (ver activity-log D-09): Vlad levanta sus propios recursos en su Org.
+      # - Name: DeployDemoResources
+      #   Actions:
+      #   - InputArtifacts:
+      #     - Name: SourceArtifacts
+      #     Name: Deploy_DemoResources
+      #     ActionTypeId:
+      #       Category: Deploy
+      #       Owner: AWS
+      #       Version: '1'
+      #       Provider: CloudFormation
+      #     Configuration:
+      #       ActionMode: REPLACE_ON_FAILURE
+      #       StackName: stackset-aws-backup-demo-resources
+      #       RoleArn: !GetAtt CloudFormationRole.Arn
+      #       Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
+      #       TemplatePath: SourceArtifacts::cloudformation/stacksets/stackset-aws-backup-demo-resources.yaml
+      #       ParameterOverrides: |
+      #         {
+      #           "CommitId": "#{SourceVariables.CommitId}"
+      #         }
+      #     RunOrder: 1
 
   CodePipelineManageStepsRole:
     Type: AWS::IAM::Role
+    # [Skips checkov documentados 2026-07-13 — ver security-review/security-scan-report.md §4.a.
+    #  Rol de ORQUESTACIÓN del pipeline (mueve artefactos entre stages). El CloudFormationRole (deploy
+    #  role, el de mayor privilegio) ya fue acotado a least-privilege (D-15). Acotar los Resource:"*"
+    #  residuales de este rol a ARNs de stacks + parameter/backup/* es remediación de entrega productiva.]
+    #checkov:skip=CKV_AWS_108:Rol de orquestación del pipeline; scoping a ARNs de stacks = remediación productiva (DSR IAM2)
+    #checkov:skip=CKV_AWS_109:Rol de orquestación del pipeline; scoping a ARNs de stacks = remediación productiva (DSR IAM2)
+    #checkov:skip=CKV_AWS_111:Rol de orquestación del pipeline; scoping a ARNs de stacks = remediación productiva (DSR IAM2)
     Properties:
       Description: CodePipeline role for moving objects through the build and deploy stages.
       AssumeRolePolicyDocument:
@@ -1587,16 +1718,61 @@ Resources:
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
-          - Effect: Allow
+          # [REMEDIADO 2026-07-13 — DSR / cfn-nag W11 — least-privilege del deploy role; ver activity-log D-15]
+          # Original over-privileged (conservado para rollback):
+          #   - Effect: Allow
+          #     Action: [iam:*, codepipeline:*, ssm:*, s3:*, backup:*, secretsmanager:GetSecretValue, lambda:*]  # pragma: allowlist secret — texto dentro de comentario (policy original en rollback), no un secreto
+          #     Resource: "*"
+          # Acotado a lo que el pipeline realmente despliega: StackSets service-managed (cubierto por el
+          # managed policy AWSCloudFormationFullAccess), Organizations policies (statements de abajo),
+          # report plans + su S3 bucket, y lectura de SSM. Sin codepipeline/lambda/secretsmanager/iam:*.
+          - Sid: SsmReadSolutionParams
+            Effect: Allow
             Action:
-            - iam:*
-            - codepipeline:*
-            - ssm:*
-            - s3:*
-            - backup:*
-            - secretsmanager:GetSecretValue
-            - lambda:*
-            Resource: "*"
+            - ssm:GetParameter
+            - ssm:GetParameters
+            Resource: !Sub "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/backup/*"
+          - Sid: ManageSolutionS3Buckets
+            Effect: Allow
+            Action:
+            - s3:CreateBucket
+            - s3:DeleteBucket
+            - s3:ListBucket
+            - s3:GetBucketLocation
+            - s3:GetBucketAcl
+            - s3:PutBucketTagging
+            - s3:GetBucketTagging
+            - s3:PutEncryptionConfiguration
+            - s3:GetEncryptionConfiguration
+            - s3:PutBucketPolicy
+            - s3:GetBucketPolicy
+            - s3:DeleteBucketPolicy
+            - s3:PutBucketPublicAccessBlock
+            - s3:GetBucketPublicAccessBlock
+            - s3:PutBucketVersioning
+            - s3:GetBucketVersioning
+            Resource: !Sub "arn:${AWS::Partition}:s3:::*"
+          - Sid: ManageBackupReportPlans
+            Effect: Allow
+            Action:
+            - backup:CreateReportPlan
+            - backup:DescribeReportPlan
+            - backup:UpdateReportPlan
+            - backup:DeleteReportPlan
+            - backup:TagResource
+            - backup:UntagResource
+            Resource: !Sub "arn:${AWS::Partition}:backup:*:${AWS::AccountId}:report-plan:*"
+          - Sid: ServiceLinkedRolesForSolution
+            Effect: Allow
+            Action:
+            - iam:CreateServiceLinkedRole
+            Resource: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/*"
+            Condition:
+              StringEquals:
+                iam:AWSServiceName:
+                - stacksets.cloudformation.amazonaws.com
+                - reports.backup.amazonaws.com
+                - backup.amazonaws.com
           - Sid: AllowOrganizationsRead
             Effect: Allow
             Action:

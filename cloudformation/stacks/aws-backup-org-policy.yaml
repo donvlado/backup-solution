@@ -1,10 +1,20 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform:
 - 'AWS::LanguageExtensions'
-Description: This template deploys AWS Organization Backup Policies to manage
-  backups at an organization level. It should be deployed in the AWS
-  Organizations management account or from an AWS Account with delegated
-  Administrator permissions.
+Description: >-
+  Despliega AWS Organizations Backup Policies para gestionar backups a nivel
+  organizacional. Debe desplegarse en la management account o desde una cuenta
+  con permisos de delegated administrator.
+
+# Molinos (demo primer borrador): modelo POR CADENCIA (D-14) — 4 policies
+# (best practice AWS = 1 plan por policy):
+#   - org-daily-backup-policy      (tag backup=daily,   35d warm).
+#   - org-weekly-backup-policy     (tag backup=weekly,  90d warm).
+#   - org-monthly-backup-policy    (tag backup=monthly, 365d, cold @ ColdStorageAfterDays).
+#   - org-compliance-backup-policy (tag data-class=regulated, annual 2555d / 7 anios CNV, cold @ N) — overlay.
+# El tag backup=none no coincide con ninguna policy (recurso excluido del backup centralizado).
+# Toda la configuracion (schedules, retenciones, cold, tags de seleccion) se
+# externaliza a SSM Parameters creados por el root template.
 
 Parameters:
   pOrgBackupTargetOUs:
@@ -27,48 +37,81 @@ Parameters:
       carries out the backup activities.
     Type: String
     Default: AWSBackupSolutionRole
-  DailyBackupSchedule:
-    Description: The CRON job to initiate backup jobs. For example, cron(0 5 ? * *
-      *) for daily, every day at 05:00 UTC.
-    Type: String
-    Default: cron(0 5 ? * * *)
-  MonthlyBackupSchedule:
-    Description: The CRON job to initiate backup jobs. For example, cron(0 5 1 * ?
-      *) for monthly, first day of month at midnight UTC.
-    Type: String
-    Default: cron(0 5 1 * ? *)
   pMemberAccountBackupVault:
     AllowedPattern: ^[a-zA-Z0-9\-\_\.]{1,50}$
     ConstraintDescription: The name of the member account Backup vaults. (Name is case sensitive).
     Type: String
     Default: AWSBackupSolutionVault
-  pBackupTagKey1:
-    Type: String
-    Description: The backup tag key to automatically assign resources to a backup
-      plan across the member accounts.
-    Default: 'backup'
-  pBackupTagValue1:
-    Type: String
-    Description: The backup tag value to automatically assign resources to a backup
-      plan across the member accounts.
-    Default: 'daily'
-  pBackupTagKey2:
-    Type: String
-    Description: The backup tag key to automatically assign resources to a backup
-      plan across the member accounts.
-    Default: 'backup'
-  pBackupTagValue2:
-    Type: String
-    Description: The backup tag value to automatically assign resources to a backup
-      plan across the member accounts.
-    Default: 'monthly'
+
+  # --- Schedules (SSM-driven) ---
+  DailyBackupSchedule:
+    Description: CRON del backup diario (operativo). Ej. cron(0 5 ? * * *).
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: "/backup/schedule/daily"
+  WeeklyBackupSchedule:
+    Description: CRON del backup semanal (operativo). Ej. cron(0 5 ? * 1 *) (domingos 05:00 UTC).
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: "/backup/schedule/weekly"
+  MonthlyBackupSchedule:
+    Description: CRON del backup mensual (operativo). Ej. cron(0 5 1 * ? *) (1° de mes 05:00 UTC).
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: "/backup/schedule/monthly"
+  AnnualBackupSchedule:
+    Description: CRON del backup anual (compliance). Ej. cron(0 5 1 1 ? *) (1° de enero 05:00 UTC).
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: "/backup/schedule/annual"
+
+  # --- Retenciones en dias (SSM-driven) ---
+  DailyRetentionDays:
+    Description: Retencion del tier diario (dias).
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: "/backup/retention/daily"
+  WeeklyRetentionDays:
+    Description: Retencion del tier semanal (dias).
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: "/backup/retention/weekly"
+  MonthlyRetentionDays:
+    Description: Retencion del tier mensual (dias).
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: "/backup/retention/monthly"
+  AnnualRetentionDays:
+    Description: Retencion del tier anual/compliance (dias). CNV = 2555 (7 anios).
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: "/backup/retention/annual"
+
+  # --- Transicion a cold (SSM-driven) ---
+  # AWS exige delete_after_days >= move_to_cold_storage_after_days + 90.
+  # Por eso el cold solo aplica a monthly (365) y annual (2555); daily/weekly quedan warm.
+  ColdStorageAfterDays:
+    Description: Dias hasta transicionar a cold (Archive). Solo monthly/annual.
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: "/backup/lifecycle/cold-after-days"
+
+  # --- Seleccion hibrida (SSM-driven) ---
+  # NOTA (constraint): las AWS Organizations backup policies solo seleccionan POR TAG
+  # (selections.tags). No admiten seleccion por tipo de recurso ni "todos los recursos".
+  # La cobertura "todo lo que vive en la OU" se logra taggeando los recursos con el tag
+  # operativo (en la simulacion Vlad los taggea; a escala, auto-tagging via tag policy).
+  pOperationalTagKey:
+    Description: Tag key de la seleccion operativa POR CADENCIA. Los valores son literales por plan (daily/weekly/monthly); backup=none no matchea (excluido). El SSM /backup/selection/operational-tag-value que crea el root template queda sin uso.
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: "/backup/selection/operational-tag-key"
+  pComplianceTagKey:
+    Description: Tag key de seleccion del subconjunto regulado (tier anual/compliance).
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: "/backup/selection/compliance-tag-key"
+  pComplianceTagValue:
+    Description: Tag value de seleccion del subconjunto regulado (tier anual/compliance).
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: "/backup/selection/compliance-tag-value"
+
   pTagKey:
     Type: String
-    Description: This is the tag key to assign to resources.
+    Description: This is the tag key to assign to recovery points.
     Default: 'project'
   pTagValue:
     Type: String
-    Description: This is the tag value to assign to resources.
+    Description: This is the tag value to assign to recovery points.
     Default: 'aws-backup'
 
   # Parameters for tagging
@@ -111,12 +154,24 @@ Parameters:
     Default: Example Application
 
 Resources:
-  rOrgDailyBackUpPolicy:
+  # ==========================================================================
+  # Policies OPERATIVAS — modelo POR CADENCIA (tag backup = daily|weekly|monthly|none).
+  # UNA policy por cadencia (best practice AWS: 1 plan por policy -> troubleshooting aislado):
+  #   backup=daily   -> rOrgDailyBackupPolicy   (35d warm)
+  #   backup=weekly  -> rOrgWeeklyBackupPolicy  (90d warm)
+  #   backup=monthly -> rOrgMonthlyBackupPolicy (365d, cold a ColdStorageAfterDays)
+  #   backup=none    -> no matchea ninguna seleccion (excluido de facto)
+  # data-class=regulated agrega el tier annual (policy Compliance, abajo).
+  # Cada rule copia al central vault (copy_actions).
+  # ==========================================================================
+
+  # ---- DAILY (warm, 35d) -> backup=daily ----
+  rOrgDailyBackupPolicy:
     Type: AWS::Organizations::Policy
     Properties:
       Name: org-daily-backup-policy
       Description: >-
-        BackupPolicy for Daily Backup as per the resource selection criteria
+        Operational daily backup policy (warm) selected by the backup=daily tag.
       Type: BACKUP_POLICY
       TargetIds: !Ref pOrgBackupTargetOUs
       Content:
@@ -133,7 +188,7 @@ Resources:
                     "@@assign": '1200'
                   lifecycle:
                     delete_after_days:
-                      "@@assign": '35'
+                      "@@assign": !Ref DailyRetentionDays
                   target_backup_vault_name:
                     "@@assign": !Ref pMemberAccountBackupVault
                   recovery_point_tags:
@@ -143,13 +198,13 @@ Resources:
                       tag_value:
                         "@@assign": !Ref pTagValue
                   copy_actions:
-                    # Currently this must be hardcoded since [AWS Backup Policy syntax](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup_syntax.html#backup-policy-syntax-reference) requires the name of this key to be the same as the target.
+                    # La key debe ser identica al ARN destino (requisito de sintaxis de Backup Policy).
                     <Replace with value from pCentralBackupVaultArn>:
                       target_backup_vault_arn:
                         "@@assign": !Ref pCentralBackupVaultArn
                       lifecycle:
                         delete_after_days:
-                          "@@assign": '35'
+                          "@@assign": !Ref DailyRetentionDays
               backup_plan_tags:
                 project:
                   tag_key:
@@ -164,10 +219,10 @@ Resources:
                     iam_role_arn:
                       "@@assign": !Sub 'arn:aws:iam::$account:role/${pCrossAccountBackupRole}'
                     tag_key:
-                      "@@assign": !Ref pBackupTagKey1
+                      "@@assign": !Ref pOperationalTagKey
                     tag_value:
                       "@@assign":
-                      - !Ref pBackupTagValue1
+                      - "daily"
       Tags:
       - Key: Application
         Value: !Ref Application
@@ -182,12 +237,85 @@ Resources:
       - Key: ApplicationOwner
         Value: !Ref ApplicationOwner
 
-  rOrgMonthlyBackUpPolicy:
+  # ---- WEEKLY (warm, 90d) -> backup=weekly ----
+  rOrgWeeklyBackupPolicy:
+    Type: AWS::Organizations::Policy
+    Properties:
+      Name: org-weekly-backup-policy
+      Description: >-
+        Operational weekly backup policy (warm) selected by the backup=weekly tag.
+      Type: BACKUP_POLICY
+      TargetIds: !Ref pOrgBackupTargetOUs
+      Content:
+        Fn::ToJsonString:
+          plans:
+            OrgBackupPlanWeekly:
+              rules:
+                OrgWeeklyBackupRule:
+                  schedule_expression:
+                    "@@assign": !Ref WeeklyBackupSchedule
+                  start_backup_window_minutes:
+                    "@@assign": '60'
+                  complete_backup_window_minutes:
+                    "@@assign": '1200'
+                  lifecycle:
+                    delete_after_days:
+                      "@@assign": !Ref WeeklyRetentionDays
+                  target_backup_vault_name:
+                    "@@assign": !Ref pMemberAccountBackupVault
+                  recovery_point_tags:
+                    project:
+                      tag_key:
+                        "@@assign": !Ref pTagKey
+                      tag_value:
+                        "@@assign": !Ref pTagValue
+                  copy_actions:
+                    <Replace with value from pCentralBackupVaultArn>:
+                      target_backup_vault_arn:
+                        "@@assign": !Ref pCentralBackupVaultArn
+                      lifecycle:
+                        delete_after_days:
+                          "@@assign": !Ref WeeklyRetentionDays
+              backup_plan_tags:
+                project:
+                  tag_key:
+                    "@@assign": !Ref pTagKey
+                  tag_value:
+                    "@@assign": !Ref pTagValue
+              regions:
+                "@@append": !Ref pRegions
+              selections:
+                tags:
+                  OrgWeeklyBackupSelection:
+                    iam_role_arn:
+                      "@@assign": !Sub 'arn:aws:iam::$account:role/${pCrossAccountBackupRole}'
+                    tag_key:
+                      "@@assign": !Ref pOperationalTagKey
+                    tag_value:
+                      "@@assign":
+                      - "weekly"
+      Tags:
+      - Key: Application
+        Value: !Ref Application
+      - Key: CommitId
+        Value: !Ref CommitId
+      - Key: BusinessUnit
+        Value: !Ref BusinessUnit
+      - Key: CostCenter
+        Value: !Ref CostCenter
+      - Key: Environment
+        Value: !Ref Environment
+      - Key: ApplicationOwner
+        Value: !Ref ApplicationOwner
+
+  # ---- MONTHLY (cold a ColdStorageAfterDays, 365d) -> backup=monthly ----
+  rOrgMonthlyBackupPolicy:
     Type: AWS::Organizations::Policy
     Properties:
       Name: org-monthly-backup-policy
       Description: >-
-        BackupPolicy for Monthly Backup as per the resource selection criteria
+        Operational monthly backup policy (cold after ColdStorageAfterDays)
+        selected by the backup=monthly tag.
       Type: BACKUP_POLICY
       TargetIds: !Ref pOrgBackupTargetOUs
       Content:
@@ -203,8 +331,10 @@ Resources:
                   complete_backup_window_minutes:
                     "@@assign": '1200'
                   lifecycle:
+                    move_to_cold_storage_after_days:
+                      "@@assign": !Ref ColdStorageAfterDays
                     delete_after_days:
-                      "@@assign": '366'
+                      "@@assign": !Ref MonthlyRetentionDays
                   target_backup_vault_name:
                     "@@assign": !Ref pMemberAccountBackupVault
                   recovery_point_tags:
@@ -214,13 +344,14 @@ Resources:
                       tag_value:
                         "@@assign": !Ref pTagValue
                   copy_actions:
-                    # Currently this must be hardcoded since [AWS Backup Policy syntax](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup_syntax.html#backup-policy-syntax-reference) requires the name of this key to be the same as the target.
                     <Replace with value from pCentralBackupVaultArn>:
                       target_backup_vault_arn:
                         "@@assign": !Ref pCentralBackupVaultArn
                       lifecycle:
+                        move_to_cold_storage_after_days:
+                          "@@assign": !Ref ColdStorageAfterDays
                         delete_after_days:
-                          "@@assign": '366'
+                          "@@assign": !Ref MonthlyRetentionDays
               backup_plan_tags:
                 project:
                   tag_key:
@@ -231,14 +362,93 @@ Resources:
                 "@@append": !Ref pRegions
               selections:
                 tags:
-                  OrgDailyBackupSelection:
+                  OrgMonthlyBackupSelection:
+                    iam_role_arn:
+                      "@@assign": !Sub 'arn:aws:iam::$account:role/${pCrossAccountBackupRole}'
+                    tag_key:
+                      "@@assign": !Ref pOperationalTagKey
+                    tag_value:
+                      "@@assign":
+                      - "monthly"
+      Tags:
+      - Key: Application
+        Value: !Ref Application
+      - Key: CommitId
+        Value: !Ref CommitId
+      - Key: BusinessUnit
+        Value: !Ref BusinessUnit
+      - Key: CostCenter
+        Value: !Ref CostCenter
+      - Key: Environment
+        Value: !Ref Environment
+      - Key: ApplicationOwner
+        Value: !Ref ApplicationOwner
+
+  # ==========================================================================
+  # Policy COMPLIANCE — 1 rule annual (retencion CNV 7 anios), cold a los N dias.
+  # Seleccion por tag data-class=regulated (subconjunto regulado).
+  # ==========================================================================
+  rOrgComplianceBackupPolicy:
+    Type: AWS::Organizations::Policy
+    Properties:
+      Name: org-compliance-backup-policy
+      Description: >-
+        Compliance annual backup policy (CNV 7-year retention) for the regulated
+        subset as per the resource selection criteria
+      Type: BACKUP_POLICY
+      TargetIds: !Ref pOrgBackupTargetOUs
+      Content:
+        Fn::ToJsonString:
+          plans:
+            OrgBackupPlanCompliance:
+              rules:
+                OrgAnnualBackupRule:
+                  schedule_expression:
+                    "@@assign": !Ref AnnualBackupSchedule
+                  start_backup_window_minutes:
+                    "@@assign": '60'
+                  complete_backup_window_minutes:
+                    "@@assign": '1200'
+                  lifecycle:
+                    move_to_cold_storage_after_days:
+                      "@@assign": !Ref ColdStorageAfterDays
+                    delete_after_days:
+                      "@@assign": !Ref AnnualRetentionDays
+                  target_backup_vault_name:
+                    "@@assign": !Ref pMemberAccountBackupVault
+                  recovery_point_tags:
+                    project:
+                      tag_key:
+                        "@@assign": !Ref pTagKey
+                      tag_value:
+                        "@@assign": !Ref pTagValue
+                  copy_actions:
+                    <Replace with value from pCentralBackupVaultArn>:
+                      target_backup_vault_arn:
+                        "@@assign": !Ref pCentralBackupVaultArn
+                      lifecycle:
+                        move_to_cold_storage_after_days:
+                          "@@assign": !Ref ColdStorageAfterDays
+                        delete_after_days:
+                          "@@assign": !Ref AnnualRetentionDays
+              backup_plan_tags:
+                project:
+                  tag_key:
+                    "@@assign": !Ref pTagKey
+                  tag_value:
+                    "@@assign": !Ref pTagValue
+              regions:
+                "@@append": !Ref pRegions
+              selections:
+                tags:
+                  OrgComplianceBackupSelection:
                     iam_role_arn:
                       "@@assign": !Sub "arn:aws:iam::$account:role/${pCrossAccountBackupRole}"
                     tag_key:
-                      "@@assign": !Ref pBackupTagKey2
+                      "@@assign": !Ref pComplianceTagKey
                     tag_value:
                       "@@assign":
-                      - !Ref pBackupTagValue2
+                      - !Ref pComplianceTagValue
       Tags:
       - Key: Application
         Value: !Ref Application

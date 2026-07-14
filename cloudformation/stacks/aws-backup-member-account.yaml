@@ -64,6 +64,7 @@ Parameters:
 
 Resources:
   rMemberAccountBackupKey:
+    #checkov:skip=CKV_AWS_33:Patrón AWS-estándar (kms:* al account root); statement cross-account al central account acotado por el diseño del vault. Condición aws:PrincipalOrgID = remediación de entrega productiva (DSR KMS2/IAM10). Ver security-review/security-scan-report.md §4.a
     Type: AWS::KMS::Key
     Metadata:
       cfn_nag:

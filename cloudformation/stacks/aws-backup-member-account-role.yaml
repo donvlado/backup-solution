@@ -58,7 +58,7 @@ Parameters:
     Default: Example Application
 
 Conditions:
-  DeployConfigurationRecorderCondition: !Equals [ !Ref DeployConfigurationRecorder, "true" ]
+  DeployConfigurationRecorderCondition: !Equals [ !Ref DeployConfigurationRecorder, "yes" ]
 
 Resources:
   rOrgAccountBackupRole:
