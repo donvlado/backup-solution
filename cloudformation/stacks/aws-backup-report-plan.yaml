@@ -80,7 +80,7 @@ Conditions:
 
 Resources:
   rReportBucket:
-    # [Skips checkov 2026-07-13 — bucket interno de reportes de AWS Backup; ver security-review/security-scan-report.md §4.a]
+    # [Suppressions de checkov — bucket interno de reportes de AWS Backup]
     #checkov:skip=CKV_AWS_18:Access logging al bucket central de logs del cliente (Log Archive), configurado en el deploy productivo
     #checkov:skip=CKV_AWS_21:Versioning se habilita en la entrega productiva
     #checkov:skip=CKV_AWS_53:Bucket interno; PublicAccessBlock = remediación de entrega productiva

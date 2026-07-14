@@ -6,7 +6,7 @@ Description: >-
   organizacional. Debe desplegarse en la management account o desde una cuenta
   con permisos de delegated administrator.
 
-# Molinos (demo primer borrador): modelo POR CADENCIA (D-14) — 4 policies
+# Modelo POR CADENCIA — 4 policies
 # (best practice AWS = 1 plan por policy):
 #   - org-daily-backup-policy      (tag backup=daily,   35d warm).
 #   - org-weekly-backup-policy     (tag backup=weekly,  90d warm).
@@ -91,7 +91,7 @@ Parameters:
   # NOTA (constraint): las AWS Organizations backup policies solo seleccionan POR TAG
   # (selections.tags). No admiten seleccion por tipo de recurso ni "todos los recursos".
   # La cobertura "todo lo que vive en la OU" se logra taggeando los recursos con el tag
-  # operativo (en la simulacion Vlad los taggea; a escala, auto-tagging via tag policy).
+  # operativo (los recursos se taggean; a escala, auto-tagging via tag policy).
   pOperationalTagKey:
     Description: Tag key de la seleccion operativa POR CADENCIA. Los valores son literales por plan (daily/weekly/monthly); backup=none no matchea (excluido). El SSM /backup/selection/operational-tag-value que crea el root template queda sin uso.
     Type: AWS::SSM::Parameter::Value<String>

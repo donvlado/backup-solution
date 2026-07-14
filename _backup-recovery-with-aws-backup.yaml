@@ -45,7 +45,7 @@ Metadata:
       - OperationalTagValue
       - ComplianceTagKey
       - ComplianceTagValue
-    # Diferido — demo primer borrador (ver activity-log D-09/D-10): restore testing retirado por costo.
+    # Diferido  (no desplegado en esta iteración): restore testing retirado por costo.
     # - Label:
     #     default: "Restore Testing Configuration - Plan"
     #   Parameters:
@@ -90,7 +90,7 @@ Metadata:
       - DeployBackupJobReportPlan
       - DeployCopyJobReportPlan
       - DeployRestoreJobReportPlan
-    # Diferido — demo primer borrador (ver activity-log D-09): Vlad levanta sus propios recursos en su Org.
+    # Diferido  (no desplegado en esta iteración): los recursos de ejemplo se proveen por separado.
     # - Label:
     #     default: "Demo Resources"
     #   Parameters:
@@ -168,7 +168,7 @@ Metadata:
       ComplianceTagValue:
         default: "Compliance Selection Tag Value"
 
-    # Diferido — demo primer borrador (ver activity-log D-09/D-10):
+    # Diferido  (no desplegado en esta iteración):
     #   RestoreTestSchedule:
     #     default: "Restore Test Schedule (CRON)"
     #   RestoreSubnetEC2:
@@ -338,8 +338,8 @@ Parameters:
     Type: String
     Default: regulated
 
-  # Diferido — demo primer borrador (ver activity-log D-09/D-10): restore testing retirado por costo,
-  # demo resources reemplazados por recursos propios en la Org de Vlad. Se conservan comentados.
+  # Diferido  (no desplegado en esta iteración): restore testing retirado por costo,
+  # demo resources reemplazados por recursos provistos por separado. Se conservan comentados.
   # RestoreTestSchedule:
   #   Description: The CRON job to initiate restore test plan. For example, cron(0 7 ? * 6 *) weekly on Saturday, at 07:00 UTC.
   #   Type: String
@@ -833,7 +833,7 @@ Resources:
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
 
-  # Diferido — demo primer borrador (ver activity-log D-09/D-10): SSM params de restore testing
+  # Diferido  (no desplegado en esta iteración): SSM params de restore testing
   # comentados (restore testing retirado por costo). Rutas originales: /backup/testing/restore-test-schedule,
   # /backup/testing/ec2/subnetId, /backup/testing/ec2/securityGroupIds, /backup/testing/ec2/validation-window-hours,
   # /backup/testing/selection-window-days, /backup/testing/start-window-hours, /backup/testing/ec2/tag-key,
@@ -895,8 +895,8 @@ Resources:
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
 
-  # Diferido — demo primer borrador (ver activity-log D-09): SSM params de demo resources comentados.
-  # Vlad levanta sus propios recursos en su Org. Rutas originales: /backup/demo/ec2-instance-type,
+  # Diferido  (no desplegado en esta iteración): SSM params de demo resources comentados.
+  # los recursos de ejemplo se proveen por separado. Rutas originales: /backup/demo/ec2-instance-type,
   # /backup/demo/vpc-cidr, /backup/demo/subnet-cidr, /backup/demo/tag-key, /backup/demo/tag-value.
 
   AWSBackupFrameworkControl2:
@@ -1116,7 +1116,7 @@ Resources:
 
   DeploymentBucket:
     Type: "AWS::S3::Bucket"
-    # [Skips checkov documentados 2026-07-13 — ver security-review/security-scan-report.md §4.a.
+    # [Suppressions de checkov con justificación.
     #  Bucket INTERNO de artefactos del pipeline; la DeploymentBucketPolicy (abajo) ya deniega ACLs
     #  públicas (DenyS3PublicObjectACL), restringe por aws:PrincipalOrgPaths y fuerza TLS. Las
     #  remediaciones (PublicAccessBlock, access logging) son de entrega productiva, no del demo.]
@@ -1338,7 +1338,7 @@ Resources:
                 "CommitId": "#{SourceVariables.CommitId}"
               }
           RunOrder: 1
-        # Diferido — demo primer borrador (ver activity-log D-09/D-10): restore testing retirado por costo.
+        # Diferido  (no desplegado en esta iteración): restore testing retirado por costo.
         # - InputArtifacts:
         #   - Name: SourceArtifacts
         #   Name: Deploy_RestoreTestPlan
@@ -1486,7 +1486,7 @@ Resources:
             RunOrder: 1
         - !Ref "AWS::NoValue"
 
-      # Diferido — demo primer borrador (ver activity-log D-09): Vlad levanta sus propios recursos en su Org.
+      # Diferido  (no desplegado en esta iteración): los recursos de ejemplo se proveen por separado.
       # - Name: DeployDemoResources
       #   Actions:
       #   - InputArtifacts:
@@ -1511,13 +1511,13 @@ Resources:
 
   CodePipelineManageStepsRole:
     Type: AWS::IAM::Role
-    # [Skips checkov documentados 2026-07-13 — ver security-review/security-scan-report.md §4.a.
+    # [Suppressions de checkov con justificación.
     #  Rol de ORQUESTACIÓN del pipeline (mueve artefactos entre stages). El CloudFormationRole (deploy
-    #  role, el de mayor privilegio) ya fue acotado a least-privilege (D-15). Acotar los Resource:"*"
+    #  role, el de mayor privilegio) ya fue acotado a least-privilege. Acotar los Resource:"*"
     #  residuales de este rol a ARNs de stacks + parameter/backup/* es remediación de entrega productiva.]
-    #checkov:skip=CKV_AWS_108:Rol de orquestación del pipeline; scoping a ARNs de stacks = remediación productiva (DSR IAM2)
-    #checkov:skip=CKV_AWS_109:Rol de orquestación del pipeline; scoping a ARNs de stacks = remediación productiva (DSR IAM2)
-    #checkov:skip=CKV_AWS_111:Rol de orquestación del pipeline; scoping a ARNs de stacks = remediación productiva (DSR IAM2)
+    #checkov:skip=CKV_AWS_108:Rol de orquestación del pipeline; scoping a ARNs de stacks = remediación de entrega productiva
+    #checkov:skip=CKV_AWS_109:Rol de orquestación del pipeline; scoping a ARNs de stacks = remediación de entrega productiva
+    #checkov:skip=CKV_AWS_111:Rol de orquestación del pipeline; scoping a ARNs de stacks = remediación de entrega productiva
     Properties:
       Description: CodePipeline role for moving objects through the build and deploy stages.
       AssumeRolePolicyDocument:
@@ -1718,7 +1718,7 @@ Resources:
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
-          # [REMEDIADO 2026-07-13 — DSR / cfn-nag W11 — least-privilege del deploy role; ver activity-log D-15]
+          # [Remediado — least-privilege del deploy role (acotado a lo que el pipeline despliega)]
           # Original over-privileged (conservado para rollback):
           #   - Effect: Allow
           #     Action: [iam:*, codepipeline:*, ssm:*, s3:*, backup:*, secretsmanager:GetSecretValue, lambda:*]  # pragma: allowlist secret — texto dentro de comentario (policy original en rollback), no un secreto
