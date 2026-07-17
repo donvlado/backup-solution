@@ -1,0 +1,12 @@
+# Editor / OS
+.DS_Store
+*.swp
+*~
+
+# Claude Code harness scratch — never commit
+.claude/
+.cc-writes/
+
+# Local scan artifacts
+FAILED
+*.log

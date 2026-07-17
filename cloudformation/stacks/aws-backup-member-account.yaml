@@ -8,6 +8,9 @@ Parameters:
   CentralAccountId:
     Description: The ARN of a centralized AWS Backup Vault that will be the secondary store for all AWS Backups.  The defined organization backup policy plans will "copy_to" this vault.
     Type: String
+  OrgId:
+    Description: The AWS Organizations ID, used to scope the vault access policy to the organization.
+    Type: String
   pCrossAccountBackupRoleName:
     Type: String
     Description: This is the IAM role name for the cross-account backup role that carries out the backup activities.
@@ -64,7 +67,6 @@ Parameters:
 
 Resources:
   rMemberAccountBackupKey:
-    #checkov:skip=CKV_AWS_33:Patrón AWS-estándar (kms:* al account root); statement cross-account al central account acotado por el diseño del vault. Condición aws:PrincipalOrgID = remediación de entrega productiva
     Type: AWS::KMS::Key
     Metadata:
       cfn_nag:
@@ -104,7 +106,7 @@ Resources:
         - Sid: Allow alias creation during setup
           Effect: "Allow"
           Principal:
-            AWS: "*"
+            AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
           Action: "kms:CreateAlias"
           Resource: "*"
           Condition:
@@ -170,6 +172,9 @@ Resources:
           Action: backup:CopyIntoBackupVault
           Resource: !Ref CentralBackupVaultArn
           Principal: "*"
+          Condition:
+            StringEquals:
+              aws:PrincipalOrgID: !Ref OrgId
 
 Outputs:
   oMemberAccountBackupVault:

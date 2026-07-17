@@ -80,13 +80,6 @@ Conditions:
 
 Resources:
   rReportBucket:
-    # [Suppressions de checkov — bucket interno de reportes de AWS Backup]
-    #checkov:skip=CKV_AWS_18:Access logging al bucket central de logs del cliente (Log Archive), configurado en el deploy productivo
-    #checkov:skip=CKV_AWS_21:Versioning se habilita en la entrega productiva
-    #checkov:skip=CKV_AWS_53:Bucket interno; PublicAccessBlock = remediación de entrega productiva
-    #checkov:skip=CKV_AWS_54:Bucket interno; PublicAccessBlock = remediación de entrega productiva
-    #checkov:skip=CKV_AWS_55:Bucket interno; PublicAccessBlock = remediación de entrega productiva
-    #checkov:skip=CKV_AWS_56:Bucket interno; PublicAccessBlock = remediación de entrega productiva
     DeletionPolicy: Retain
     Type: AWS::S3::Bucket
     Properties:
@@ -94,6 +87,16 @@ Resources:
         ServerSideEncryptionConfiguration:
         - ServerSideEncryptionByDefault:
             SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LoggingConfiguration:
+        DestinationBucketName: !Ref rReportAccessLogsBucket
+        LogFilePrefix: report-bucket/
       Tags:
         - Key: Application
           Value: !Ref Application
@@ -107,6 +110,69 @@ Resources:
           Value: !Ref Environment
         - Key: ApplicationOwner
           Value: !Ref ApplicationOwner
+
+  rReportAccessLogsBucket:
+    DeletionPolicy: Retain
+    Type: AWS::S3::Bucket
+    #checkov:skip=CKV_AWS_18:Bucket destino de S3 server access logs; no puede auto-loguearse (recursion), excepcion documentada de AWS para buckets de logs.
+    Properties:
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+        - Id: ExpireAccessLogs
+          Status: Enabled
+          ExpirationInDays: '365'
+      Tags:
+        - Key: Application
+          Value: !Ref Application
+        - Key: BusinessUnit
+          Value: !Ref BusinessUnit
+        - Key: CostCenter
+          Value: !Ref CostCenter
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ApplicationOwner
+          Value: !Ref ApplicationOwner
+
+  rReportAccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref rReportAccessLogsBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Sid: S3ServerAccessLogsDelivery
+          Effect: Allow
+          Principal:
+            Service: logging.s3.amazonaws.com
+          Action: s3:PutObject
+          Resource: !Sub "arn:${AWS::Partition}:s3:::${rReportAccessLogsBucket}/*"
+          Condition:
+            StringEquals:
+              aws:SourceAccount: !Ref "AWS::AccountId"
+        - Sid: DenyInsecureConnections
+          Effect: Deny
+          Principal: "*"
+          Action: s3:*
+          Resource:
+          - !Sub "arn:${AWS::Partition}:s3:::${rReportAccessLogsBucket}"
+          - !Sub "arn:${AWS::Partition}:s3:::${rReportAccessLogsBucket}/*"
+          Condition:
+            Bool:
+              aws:SecureTransport: 'false'
 
   rReportBucketPolicy:
     Type: AWS::S3::BucketPolicy

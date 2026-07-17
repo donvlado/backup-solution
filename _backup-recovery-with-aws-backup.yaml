@@ -5,15 +5,12 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
     - Label:
-        default: "GitHub Configuration"
-      Parameters:
-      - GitHubRepo
-      - GitHubBranch
-    - Label:
-        default: "GitHub Credentials"
+        default: "Source Configuration (GitHub via CodeConnections)"
       Parameters:
       - GitHubUsername
-      - GitHubPersonalAccessToken
+      - GitHubRepo
+      - GitHubBranch
+      - CodeConnectionArn
     - Label:
         default: "Solution Configuration"
       Parameters:
@@ -45,21 +42,6 @@ Metadata:
       - OperationalTagValue
       - ComplianceTagKey
       - ComplianceTagValue
-    # Diferido  (no desplegado en esta iteración): restore testing retirado por costo.
-    # - Label:
-    #     default: "Restore Testing Configuration - Plan"
-    #   Parameters:
-    #   - RestoreTestSchedule
-    #   - SelectionWindowDays
-    #   - StartWindowHours
-    # - Label:
-    #     default: "Restore Testing Selection - EC2"
-    #   Parameters:
-    #   - RestoreSubnetEC2
-    #   - RestoreSecurityGroupIdEC2
-    #   - RestoreValidationHoursEC2
-    #   - TagKey
-    #   - TagValue
     - Label:
         default: "Customer Specific Tags"
       Parameters:
@@ -90,15 +72,6 @@ Metadata:
       - DeployBackupJobReportPlan
       - DeployCopyJobReportPlan
       - DeployRestoreJobReportPlan
-    # Diferido  (no desplegado en esta iteración): los recursos de ejemplo se proveen por separado.
-    # - Label:
-    #     default: "Demo Resources"
-    #   Parameters:
-    #   - AWSBackupDemoEC2InstanceType
-    #   - AWSBackupDemoVPCCIDR
-    #   - AWSBackupDemoSubnetCIDR
-    #   - AWSBackupDemoTagKey
-    #   - AWSBackupDemoTagValue
     - Label:
         default: "AWS Config Configuration Recorder"
       Parameters:
@@ -110,9 +83,9 @@ Metadata:
       GitHubBranch:
         default: "GitHub Branch"
       GitHubUsername:
-        default: "GitHub Username"
-      GitHubPersonalAccessToken:
-        default: "GitHub Personal Access Token"
+        default: "GitHub Username / Org"
+      CodeConnectionArn:
+        default: "CodeConnections Connection ARN"
       OrgId:
         default: "AWS Organization ID"
       OrgMgmtAcctId:
@@ -168,35 +141,6 @@ Metadata:
       ComplianceTagValue:
         default: "Compliance Selection Tag Value"
 
-    # Diferido  (no desplegado en esta iteración):
-    #   RestoreTestSchedule:
-    #     default: "Restore Test Schedule (CRON)"
-    #   RestoreSubnetEC2:
-    #     default: "Restore Subnet for EC2"
-    #   RestoreSecurityGroupIdEC2:
-    #     default: "Restore Security Group ID to use for EC2"
-    #   RestoreValidationHoursEC2:
-    #     default: "Restore Validation Duration Time (Hours)"
-    #   SelectionWindowDays:
-    #     default: "Recovery Points Selection Window (Days)"
-    #   StartWindowHours:
-    #     default: "Restore Testing Start Window (Hours)"
-    #   TagKey:
-    #     default: "Resource Point Selection Tag Key"
-    #   TagValue:
-    #     default: "Resource Point Selection Tag Value"
-
-    #   AWSBackupDemoEC2InstanceType:
-    #     default: "Demo EC2 Instance Type"
-    #   AWSBackupDemoVPCCIDR:
-    #     default: "Demo VPC CIDR Block"
-    #   AWSBackupDemoSubnetCIDR:
-    #     default: "Demo Subnet CIDR Block"
-    #   AWSBackupDemoTagKey:
-    #     default: "Tag Key for AWS Backup"
-    #   AWSBackupDemoTagValue:
-    #     default: "Tag Value for AWS Backup"
-
       DeployControl1:
         default: "Control #1-Backup resources are included in at least one backup plan"
       DeployControl2:
@@ -245,12 +189,12 @@ Parameters:
     Default: "main"
 
   GitHubUsername:
-    Description: Your GitHub Username containing the forked solution repository.
+    Description: Your GitHub Username/Org that owns the forked solution repository.
     Type: String
-  GitHubPersonalAccessToken:
-    Description: Your GitHub Personal Access Token you generated for CodePipeline integration
+  CodeConnectionArn:
+    Description: ARN of the AWS CodeConnections connection to GitHub (provider CodeStarSourceConnection). Reemplaza el GitHub PAT.
     Type: String
-    NoEcho: true # Ensures the value is hidden in the AWS Console and outputs
+    AllowedPattern: "^arn:aws[a-z-]*:(codeconnections|codestar-connections):[a-z0-9-]+:[0-9]{12}:connection/[a-f0-9-]+$"
 
   OrgId:
     Description: The AWS Organizations ID where backup policies will be administered
@@ -276,13 +220,13 @@ Parameters:
 
   AWSBackupCentralAccountOU:
     Type: String
-    Description: The AWS OU for the central account that will be the secondary store for all accounts / regions. Secondary copies and restore testing will be in the selected account within this OU.
+    Description: The AWS OU for the central account that will be the secondary store for all accounts / regions. Secondary copies will be in the selected account within this OU.
   AWSBackupCentralAccountId:
     Type: String
-    Description: The AWS Account ID for the central account that will be the secondary store for all AWS Backups. Secondary copies and restore testing will be in this account.
+    Description: The AWS Account ID for the central account that will be the secondary store for all AWS Backups. Secondary copies will be in this account.
   AWSBackupCentralAccountRegion:
     Type: String
-    Description: The region for the central account that will be the secondary store for all AWS Backups. Secondary copies and restore testing will be in this region.
+    Description: The region for the central account that will be the secondary store for all AWS Backups. Secondary copies will be in this region.
 
   # --- Backup Plan Configuration (alimenta los SSM Parameters que consume el org-policy) ---
   DailyBackupSchedule:
@@ -337,59 +281,6 @@ Parameters:
     Description: Tag value de seleccion del subconjunto regulado (tier anual/compliance).
     Type: String
     Default: regulated
-
-  # Diferido  (no desplegado en esta iteración): restore testing retirado por costo,
-  # demo resources reemplazados por recursos provistos por separado. Se conservan comentados.
-  # RestoreTestSchedule:
-  #   Description: The CRON job to initiate restore test plan. For example, cron(0 7 ? * 6 *) weekly on Saturday, at 07:00 UTC.
-  #   Type: String
-  #   Default: cron(0 7 ? * 6 *)
-  # RestoreSubnetEC2:
-  #   Description: The restore subnet for EC2 restore testing.
-  #   Type: String
-  # RestoreSecurityGroupIdEC2:
-  #   Description: The restore security group IDs for EC2 restore testing.
-  #   Type: String
-  # RestoreValidationHoursEC2:
-  #   Description: The number of hours to keep the EC2 instance active for restore validation.
-  #   Type: String
-  #   Default: 1
-  # SelectionWindowDays:
-  #   Description: The number of days to select recovery points.
-  #   Type: Number
-  #   Default: 365
-  # StartWindowHours:
-  #   Description: The number of hours for the restore testing start window.
-  #   Type: Number
-  #   Default: 1
-  # TagKey:
-  #   Description: The tag key used for selecting resources. For example, "backup".
-  #   Type: String
-  #   Default: "backup"
-  # TagValue:
-  #   Description: The tag value used for selecting resources. For example, "daily".
-  #   Type: String
-  #   Default: "daily"
-  # AWSBackupDemoEC2InstanceType:
-  #   Description: The instance type for demo EC2 instances
-  #   Type: String
-  #   Default: "t3.nano"
-  # AWSBackupDemoVPCCIDR:
-  #   Description: The CIDR for demo VPC
-  #   Type: String
-  #   Default: "10.0.0.0/16"
-  # AWSBackupDemoSubnetCIDR:
-  #   Description: The CIDR for demo subnet
-  #   Type: String
-  #   Default: "10.0.1.0/24"
-  # AWSBackupDemoTagKey:
-  #   Description: The tag key to apply to demo resources - align to AWS Backup policy
-  #   Type: String
-  #   Default: "backup"
-  # AWSBackupDemoTagValue:
-  #   Description: The tag value to apply to demo resources - align to AWS Backup policy
-  #   Type: String
-  #   Default: "daily"
 
   BusinessUnit:
     Description: Business Unit Name
@@ -547,8 +438,8 @@ Parameters:
     Default: no
 
 Conditions:
-  # Molinos: corregido "true" -> "yes" (los AllowedValues del parametro son yes/no; con "true" el
-  # condition nunca daba verdadero y los report plans no se desplegaban). Reports on para la demo.
+  # Fix: "true" -> "yes" (los AllowedValues del parametro son yes/no; con "true" el
+  # condition nunca daba verdadero y los report plans no se desplegaban).
   DeployReportFeatureCondition: !Equals [ !Ref DeployReportFeature, "yes" ]
 
 Resources:
@@ -597,7 +488,7 @@ Resources:
   AWSBackupCentralAccountOUSSM:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: "The AWS OU for the central account that will be the secondary store for all AWS Backups.  Secondary copies and restore testing will be in an account within this OU"
+      Description: "The AWS OU for the central account that will be the secondary store for all AWS Backups.  Secondary copies will be in an account within this OU"
       Name: "/backup/central-account-ou"
       Type: String
       Value: !Ref AWSBackupCentralAccountOU
@@ -611,7 +502,7 @@ Resources:
   AWSBackupCentralAccountIdSSM:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: "The AWS Account ID for the central account that will be the secondary store for all AWS Backups.  Secondary copies and restore testing will be in this account."
+      Description: "The AWS Account ID for the central account that will be the secondary store for all AWS Backups.  Secondary copies will be in this account."
       Name: "/backup/central-account-id"
       Type: String
       Value: !Ref AWSBackupCentralAccountId
@@ -625,7 +516,7 @@ Resources:
   AWSBackupCentralAccountRegionSSM:
     Type: AWS::SSM::Parameter
     Properties:
-      Description: "The region for the central account that will be the secondary store for all AWS Backups.  Secondary copies and restore testing will be in this region."
+      Description: "The region for the central account that will be the secondary store for all AWS Backups.  Secondary copies will be in this region."
       Name: "/backup/central-account-region"
       Type: String
       Value: !Ref AWSBackupCentralAccountRegion
@@ -833,12 +724,6 @@ Resources:
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
 
-  # Diferido  (no desplegado en esta iteración): SSM params de restore testing
-  # comentados (restore testing retirado por costo). Rutas originales: /backup/testing/restore-test-schedule,
-  # /backup/testing/ec2/subnetId, /backup/testing/ec2/securityGroupIds, /backup/testing/ec2/validation-window-hours,
-  # /backup/testing/selection-window-days, /backup/testing/start-window-hours, /backup/testing/ec2/tag-key,
-  # /backup/testing/ec2/tag-value. Alimentaban los stacksets de restore testing (tambien comentados en el pipeline).
-
   AWSBackupTargetGlobalRegion:
     Type: AWS::SSM::Parameter
     Properties:
@@ -894,10 +779,6 @@ Resources:
         CostCenter: !Ref CostCenter
         Environment: !Ref Environment
         ApplicationOwner: !Ref ApplicationOwner
-
-  # Diferido  (no desplegado en esta iteración): SSM params de demo resources comentados.
-  # los recursos de ejemplo se proveen por separado. Rutas originales: /backup/demo/ec2-instance-type,
-  # /backup/demo/vpc-cidr, /backup/demo/subnet-cidr, /backup/demo/tag-key, /backup/demo/tag-value.
 
   AWSBackupFrameworkControl2:
     Type: AWS::SSM::Parameter
@@ -1116,28 +997,23 @@ Resources:
 
   DeploymentBucket:
     Type: "AWS::S3::Bucket"
-    # [Suppressions de checkov con justificación.
-    #  Bucket INTERNO de artefactos del pipeline; la DeploymentBucketPolicy (abajo) ya deniega ACLs
-    #  públicas (DenyS3PublicObjectACL), restringe por aws:PrincipalOrgPaths y fuerza TLS. Las
-    #  remediaciones (PublicAccessBlock, access logging) son de entrega productiva, no del demo.]
-    #checkov:skip=CKV_AWS_18:Access logging al bucket central de logs del cliente (Log Archive), configurado en el deploy productivo
-    #checkov:skip=CKV_AWS_53:Bucket interno; bucket policy ya deniega ACLs públicas + PrincipalOrgPaths + TLS. PublicAccessBlock = remediación productiva
-    #checkov:skip=CKV_AWS_54:Bucket interno; bucket policy ya deniega ACLs públicas + PrincipalOrgPaths + TLS. PublicAccessBlock = remediación productiva
-    #checkov:skip=CKV_AWS_55:Bucket interno; bucket policy ya deniega ACLs públicas + PrincipalOrgPaths + TLS. PublicAccessBlock = remediación productiva
-    #checkov:skip=CKV_AWS_56:Bucket interno; bucket policy ya deniega ACLs públicas + PrincipalOrgPaths + TLS. PublicAccessBlock = remediación productiva
     Properties:
-      #      BucketEncryption:
-      #        ServerSideEncryptionConfiguration:
-      #          - ServerSideEncryptionByDefault:
-      #              SSEAlgorithm: aws:kms
-      #              KMSMasterKeyID:
-      #                Fn::ImportValue: <S3 CMK KMS Encryption Key>
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !GetAtt CodePipelineKMSKey.Arn
+            BucketKeyEnabled: true
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
       VersioningConfiguration:
         Status: Enabled
-      #      LoggingConfiguration:
-      #        DestinationBucketName:
-      #          Fn::ImportValue: !Sub <Destination Log Bucket>
-      #        LogFilePrefix: <Logfile Prefix>
+      LoggingConfiguration:
+        DestinationBucketName: !Ref AccessLogsBucket
+        LogFilePrefix: deployment-bucket/
       LifecycleConfiguration:
         Rules:
         - Id: DeleteRule
@@ -1205,6 +1081,68 @@ Resources:
             ForAnyValue:StringLike:
               aws:PrincipalOrgPaths:
               - !Sub "${OrgId}/*"
+
+  AccessLogsBucket:
+    Type: "AWS::S3::Bucket"
+    #checkov:skip=CKV_AWS_18:Bucket destino de S3 server access logs; no puede auto-loguearse (recursion), excepcion documentada de AWS para buckets de logs.
+    Properties:
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+        - Id: ExpireAccessLogs
+          Status: Enabled
+          ExpirationInDays: '365'
+      Tags:
+      - Key: Application
+        Value: !Ref Application
+      - Key: BusinessUnit
+        Value: !Ref BusinessUnit
+      - Key: CostCenter
+        Value: !Ref CostCenter
+      - Key: Environment
+        Value: !Ref Environment
+      - Key: ApplicationOwner
+        Value: !Ref ApplicationOwner
+
+  AccessLogsBucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket: !Ref AccessLogsBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: S3ServerAccessLogsDelivery
+          Effect: Allow
+          Principal:
+            Service: logging.s3.amazonaws.com
+          Action: s3:PutObject
+          Resource: !Sub "${AccessLogsBucket.Arn}/*"
+          Condition:
+            StringEquals:
+              aws:SourceAccount: !Ref "AWS::AccountId"
+        - Sid: DenyInsecureConnections
+          Effect: Deny
+          Principal: "*"
+          Action: s3:*
+          Resource:
+          - !GetAtt AccessLogsBucket.Arn
+          - !Sub "${AccessLogsBucket.Arn}/*"
+          Condition:
+            Bool:
+              aws:SecureTransport: 'false'
 
   # --- Pipeline Assets
   # KMS Key for CodePipeline
@@ -1277,14 +1215,14 @@ Resources:
           Name: Source
           ActionTypeId:
             Category: Source
-            Owner: ThirdParty
+            Owner: AWS
             Version: '1'
-            Provider: GitHub
+            Provider: CodeStarSourceConnection
           Configuration:
-            Owner: !Ref GitHubUsername # The owner of the forked repository
-            Repo: !Ref GitHubRepo # The name of the forked repository
-            Branch: !Ref GitHubBranch # The branch you want to track in the forked repo
-            OAuthToken: !Ref GitHubPersonalAccessToken  # pragma: allowlist secret — referencia CFN a param NoEcho, no un secreto hardcodeado
+            ConnectionArn: !Ref CodeConnectionArn # CodeConnections handshake reemplaza el GitHub PAT
+            FullRepositoryId: !Sub "${GitHubUsername}/${GitHubRepo}" # owner/repo del fork
+            BranchName: !Ref GitHubBranch # The branch you want to track in the forked repo
+            OutputArtifactFormat: CODE_ZIP
           OutputArtifacts:
           - Name: SourceArtifacts
           Namespace: SourceVariables
@@ -1338,45 +1276,6 @@ Resources:
                 "CommitId": "#{SourceVariables.CommitId}"
               }
           RunOrder: 1
-        # Diferido  (no desplegado en esta iteración): restore testing retirado por costo.
-        # - InputArtifacts:
-        #   - Name: SourceArtifacts
-        #   Name: Deploy_RestoreTestPlan
-        #   ActionTypeId:
-        #     Category: Deploy
-        #     Owner: AWS
-        #     Version: '1'
-        #     Provider: CloudFormation
-        #   Configuration:
-        #     ActionMode: CREATE_UPDATE
-        #     StackName: stackset-aws-backup-restore-test-plan
-        #     RoleArn: !GetAtt CloudFormationRole.Arn
-        #     Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
-        #     TemplatePath: SourceArtifacts::cloudformation/stacksets/stackset-aws-backup-restore-test-plan.yaml
-        #     ParameterOverrides: |
-        #       {
-        #         "CommitId": "#{SourceVariables.CommitId}"
-        #       }
-        #   RunOrder: 2
-        # - InputArtifacts:
-        #   - Name: SourceArtifacts
-        #   Name: Deploy_RestoreTestValidation
-        #   ActionTypeId:
-        #     Category: Deploy
-        #     Owner: AWS
-        #     Version: '1'
-        #     Provider: CloudFormation
-        #   Configuration:
-        #     ActionMode: CREATE_UPDATE
-        #     StackName: stackset-aws-backup-restore-test-validation
-        #     RoleArn: !GetAtt CloudFormationRole.Arn
-        #     Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
-        #     TemplatePath: SourceArtifacts::cloudformation/stacksets/stackset-aws-backup-restore-test-validation.yaml
-        #     ParameterOverrides: |
-        #       {
-        #         "CommitId": "#{SourceVariables.CommitId}"
-        #       }
-        #   RunOrder: 3
       - Name: DeployBackupRecoveryMemberAccounts
         Actions:
         - InputArtifacts:
@@ -1486,29 +1385,6 @@ Resources:
             RunOrder: 1
         - !Ref "AWS::NoValue"
 
-      # Diferido  (no desplegado en esta iteración): los recursos de ejemplo se proveen por separado.
-      # - Name: DeployDemoResources
-      #   Actions:
-      #   - InputArtifacts:
-      #     - Name: SourceArtifacts
-      #     Name: Deploy_DemoResources
-      #     ActionTypeId:
-      #       Category: Deploy
-      #       Owner: AWS
-      #       Version: '1'
-      #       Provider: CloudFormation
-      #     Configuration:
-      #       ActionMode: REPLACE_ON_FAILURE
-      #       StackName: stackset-aws-backup-demo-resources
-      #       RoleArn: !GetAtt CloudFormationRole.Arn
-      #       Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
-      #       TemplatePath: SourceArtifacts::cloudformation/stacksets/stackset-aws-backup-demo-resources.yaml
-      #       ParameterOverrides: |
-      #         {
-      #           "CommitId": "#{SourceVariables.CommitId}"
-      #         }
-      #     RunOrder: 1
-
   CodePipelineManageStepsRole:
     Type: AWS::IAM::Role
     # [Suppressions de checkov con justificación.
@@ -1597,6 +1473,11 @@ Resources:
             - 'kms:DescribeKey'
             Resource: !GetAtt CodePipelineKMSKey.Arn
             Effect: Allow
+          - Effect: Allow
+            Action:
+            - codestar-connections:UseConnection
+            - codeconnections:UseConnection
+            Resource: !Ref CodeConnectionArn
 
       Tags:
       - Key: Application

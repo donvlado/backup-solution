@@ -56,7 +56,7 @@ Parameters:
 
 Resources:
   rCentralAccountBackupKey:
-    #checkov:skip=CKV_AWS_33:Patrón AWS-estándar (kms:* al account root); uso cross-account acotado por el diseño del vault. Condición aws:PrincipalOrgID = remediación de entrega productiva
+    #checkov:skip=CKV_AWS_33:Principal:* de uso cross-account acotado por Condition aws:PrincipalOrgPaths (pOrganizationId/*); el vault central recibe copias de todas las cuentas de la org por diseno y no se pueden enumerar los principals. Condicion ya aplicada, no diferida.
     Type: AWS::KMS::Key
     Metadata:
       cfn_nag:

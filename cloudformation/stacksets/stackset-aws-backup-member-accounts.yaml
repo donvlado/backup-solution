@@ -37,8 +37,13 @@ Parameters:
     Default: "/backup/central-vault-arn"
   CentralAccountId:
     Type: AWS::SSM::Parameter::Value<String>
-    Description: The AWS Account ID for the central account that will be the secondary store for all AWS Backups.  Secondary copies and restore testing will be in this account.
+    Description: The AWS Account ID for the central account that will be the secondary store for all AWS Backups.  Secondary copies will be in this account.
     Default: "/backup/central-account-id"
+
+  OrgId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: The AWS Organizations ID, used to scope the member vault access policy to the organization.
+    Default: "/backup/org-id"
 
   # Parameters for tagging
   CommitId:
@@ -116,6 +121,8 @@ Resources:
         ParameterValue: !Ref CentralBackupVaultArn
       - ParameterKey: CentralAccountId
         ParameterValue: !Ref CentralAccountId
+      - ParameterKey: OrgId
+        ParameterValue: !Ref OrgId
       - ParameterKey: Application
         ParameterValue: !Ref Application
       - ParameterKey: BusinessUnit
