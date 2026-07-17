@@ -320,122 +320,122 @@ Parameters:
     Description: 'Do you want to evaluates if resources are included in at least one backup plan?'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: yes
+    - "yes"
+    - "no"
+    Default: "yes"
   DeployControl2:
     Description: 'Do you want to evaluates if backup frequency is at least x day and retention period is at least y days?'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: yes
+    - "yes"
+    - "no"
+    Default: "yes"
   DeployControl3:
     Description: 'Do you want to evaluates if backup vaults do not allow manual deletion of recovery points except by certain AWS Identity and Access Management (IAM) roles?'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: no
+    - "yes"
+    - "no"
+    Default: "no"
   DeployControl4:
     Description: 'Do you want to evaluates if the recovery points are encrypted?'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: yes
+    - "yes"
+    - "no"
+    Default: "yes"
   DeployControl5:
     Description: 'Do you want to Evaluates if the recovery point retention period is at least x days?'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: yes
+    - "yes"
+    - "no"
+    Default: "yes"
   DeployControl6:
     Description: 'Do you want to ealuates if a resource is configured to create copies of its backups to another AWS Region?'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: no
+    - "yes"
+    - "no"
+    Default: "no"
   DeployControl7:
     Description: 'Do you want to evaluates if a resource has a cross-account backup copy configured?'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: yes
+    - "yes"
+    - "no"
+    Default: "yes"
   DeployControl8:
     Description: 'Do you want to evaluates if a resource is configured to have backups in locked backup vault?'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: no
+    - "yes"
+    - "no"
+    Default: "no"
   DeployControl9:
     Description: 'Do you want to evaluates if a recovery point was created within specified time frame?'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: yes
+    - "yes"
+    - "no"
+    Default: "yes"
   DeployControl10:
     Description: 'Do you want to evaluates if restore testing job completed within target restore time?'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: no
+    - "yes"
+    - "no"
+    Default: "no"
 
   DeployReportFeature:
     Description: 'Do you want to deploy Report resources?'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: yes
+    - "yes"
+    - "no"
+    Default: "yes"
   DeployResourceComplianceReportPlan:
     Description: 'Do you want to create a Resource Compliance Report Plan? This parameter is only used if the value of "Backup Audit Manager Report Feature" is set to true.'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: yes
+    - "yes"
+    - "no"
+    Default: "yes"
   DeployControlComplianceReportPlan:
     Description: 'Do you want to create a Control Compliance Report Plan? This parameter is only used if the value of "Backup Audit Manager Report Feature" is set to true.'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: yes
+    - "yes"
+    - "no"
+    Default: "yes"
   DeployBackupJobReportPlan:
     Description: 'Do you want to create a Backup Job Report Plan? This parameter is only used if the value of "Backup Audit Manager Report Feature" is set to true.'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: yes
+    - "yes"
+    - "no"
+    Default: "yes"
   DeployCopyJobReportPlan:
     Description: 'Do you want to create a Copy Job Report Plan? This parameter is only used if the value of "Backup Audit Manager Report Feature" is set to true.'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: yes
+    - "yes"
+    - "no"
+    Default: "yes"
   DeployRestoreJobReportPlan:
     Description: 'Do you want to create a Restore Job Report Plan? This parameter is only used if the value of "Backup Audit Manager Report Feature" is set to true.'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: yes
+    - "yes"
+    - "no"
+    Default: "yes"
   DeployConfigurationRecorder:
     Description: 'Do you want to configure a Configuration Recorders for each region you use. If you select false, you must configure one Configuration Recorder for each region that you use manually.'
     Type: String
     AllowedValues:
-    - yes
-    - no
-    Default: no
+    - "yes"
+    - "no"
+    Default: "no"
 
 Conditions:
   # Fix: "true" -> "yes" (los AllowedValues del parametro son yes/no; con "true" el
