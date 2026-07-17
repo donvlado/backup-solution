@@ -199,7 +199,7 @@ Resources:
                         "@@assign": !Ref pTagValue
                   copy_actions:
                     # La key debe ser identica al ARN destino (requisito de sintaxis de Backup Policy).
-                    <Replace with value from pCentralBackupVaultArn>:
+                    "arn:aws:backup:us-east-1:789712594936:backup-vault:AWSBackupSolutionCentralVault":
                       target_backup_vault_arn:
                         "@@assign": !Ref pCentralBackupVaultArn
                       lifecycle:
@@ -270,7 +270,7 @@ Resources:
                       tag_value:
                         "@@assign": !Ref pTagValue
                   copy_actions:
-                    <Replace with value from pCentralBackupVaultArn>:
+                    "arn:aws:backup:us-east-1:789712594936:backup-vault:AWSBackupSolutionCentralVault":
                       target_backup_vault_arn:
                         "@@assign": !Ref pCentralBackupVaultArn
                       lifecycle:
@@ -344,7 +344,7 @@ Resources:
                       tag_value:
                         "@@assign": !Ref pTagValue
                   copy_actions:
-                    <Replace with value from pCentralBackupVaultArn>:
+                    "arn:aws:backup:us-east-1:789712594936:backup-vault:AWSBackupSolutionCentralVault":
                       target_backup_vault_arn:
                         "@@assign": !Ref pCentralBackupVaultArn
                       lifecycle:
@@ -423,7 +423,7 @@ Resources:
                       tag_value:
                         "@@assign": !Ref pTagValue
                   copy_actions:
-                    <Replace with value from pCentralBackupVaultArn>:
+                    "arn:aws:backup:us-east-1:789712594936:backup-vault:AWSBackupSolutionCentralVault":
                       target_backup_vault_arn:
                         "@@assign": !Ref pCentralBackupVaultArn
                       lifecycle:
