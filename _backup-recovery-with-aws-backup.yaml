@@ -1387,13 +1387,13 @@ Resources:
 
   CodePipelineManageStepsRole:
     Type: AWS::IAM::Role
-    # [Suppressions de checkov con justificación.
-    #  Rol de ORQUESTACIÓN del pipeline (mueve artefactos entre stages). El CloudFormationRole (deploy
-    #  role, el de mayor privilegio) ya fue acotado a least-privilege. Acotar los Resource:"*"
-    #  residuales de este rol a ARNs de stacks + parameter/backup/* es remediación de entrega productiva.]
-    #checkov:skip=CKV_AWS_108:Rol de orquestación del pipeline; scoping a ARNs de stacks = remediación de entrega productiva
-    #checkov:skip=CKV_AWS_109:Rol de orquestación del pipeline; scoping a ARNs de stacks = remediación de entrega productiva
-    #checkov:skip=CKV_AWS_111:Rol de orquestación del pipeline; scoping a ARNs de stacks = remediación de entrega productiva
+    # [CodePipelineManageStepsRole: rol de orquestación del pipeline. Escritura acotada: cloudformation a
+    #  los stacks del pipeline (org-policy/report-plan/stacksets/changesets), ssm a parameter/backup/*.
+    #  Los únicos Resource:"*" residuales son cloudformation:ValidateTemplate y codebuild:List* — acciones
+    #  que AWS no soporta a nivel de recurso -> skip válido permanente. (Deriva del uso real del rol.)]
+    #checkov:skip=CKV_AWS_108:Solo ValidateTemplate y codebuild:List* en "*" (sin resource-level en AWS); escritura ya acotada
+    #checkov:skip=CKV_AWS_109:Solo ValidateTemplate y codebuild:List* en "*" (sin resource-level en AWS); escritura ya acotada
+    #checkov:skip=CKV_AWS_111:Solo ValidateTemplate y codebuild:List* en "*" (sin resource-level en AWS); escritura ya acotada
     Properties:
       Description: CodePipeline role for moving objects through the build and deploy stages.
       AssumeRolePolicyDocument:
@@ -1439,6 +1439,7 @@ Resources:
             Action:
             - iam:PassRole
             Resource: !GetAtt CloudFormationRole.Arn
+          # Acotado a los stacks que el pipeline despliega (org-policy, report-plan, los 4 stacksets) + changesets.
           - Effect: Allow
             Action:
             - cloudformation:CreateStack
@@ -1451,13 +1452,23 @@ Resources:
             - cloudformation:DescribeChangeSet
             - cloudformation:ExecuteChangeSet
             - cloudformation:SetStackPolicy
+            Resource:
+            - !Sub "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-backup-org-policy/*"
+            - !Sub "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-backup-report-plan/*"
+            - !Sub "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/stackset-aws-backup-*/*"
+            - !Sub "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:changeSet/*"
+          # cloudformation:ValidateTemplate NO soporta permisos a nivel de recurso -> Resource:"*" (skip valido)
+          - Effect: Allow
+            Action:
             - cloudformation:ValidateTemplate
             Resource: "*"
+          # SSM acotado a los parametros de la solucion.
           - Effect: Allow
             Action:
             - ssm:GetParameter
             - ssm:GetParameters
-            Resource: "*"
+            Resource: !Sub "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/backup/*"
+          # Acciones de listado de CodeBuild: NO soportan permisos a nivel de recurso -> Resource:"*" (skip valido)
           - Effect: Allow
             Action:
             - codebuild:ListBuilds
