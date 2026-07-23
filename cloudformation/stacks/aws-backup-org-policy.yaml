@@ -198,13 +198,19 @@ Resources:
                       tag_value:
                         "@@assign": !Ref pTagValue
                   copy_actions:
-                    # La key debe ser identica al ARN destino (requisito de sintaxis de Backup Policy).
-                    <Replace with value from pCentralBackupVaultArn>:
-                      target_backup_vault_arn:
-                        "@@assign": !Ref pCentralBackupVaultArn
-                      lifecycle:
-                        delete_after_days:
-                          "@@assign": !Ref DailyRetentionDays
+                    # Key y value construidos dinamicamente (AWS::LanguageExtensions / Fn::ForEach)
+                    # desde el ARN deterministico del central vault (SSM /backup/central-vault-arn):
+                    # elimina la edicion manual del placeholder y el gate DeployBackupOrgPolicy.
+                    # La key del mapa debe ser identica al ARN destino (requisito de AWS Backup Policy).
+                    'Fn::ForEach::CopyDaily':
+                      - ArnDaily
+                      - - !Ref pCentralBackupVaultArn
+                      - '${ArnDaily}':
+                          target_backup_vault_arn:
+                            "@@assign": !Ref pCentralBackupVaultArn
+                          lifecycle:
+                            delete_after_days:
+                              "@@assign": !Ref DailyRetentionDays
               backup_plan_tags:
                 project:
                   tag_key:
@@ -270,12 +276,16 @@ Resources:
                       tag_value:
                         "@@assign": !Ref pTagValue
                   copy_actions:
-                    <Replace with value from pCentralBackupVaultArn>:
-                      target_backup_vault_arn:
-                        "@@assign": !Ref pCentralBackupVaultArn
-                      lifecycle:
-                        delete_after_days:
-                          "@@assign": !Ref WeeklyRetentionDays
+                    # Key/value dinamicos (AWS::LanguageExtensions / Fn::ForEach) desde el ARN deterministico.
+                    'Fn::ForEach::CopyWeekly':
+                      - ArnWeekly
+                      - - !Ref pCentralBackupVaultArn
+                      - '${ArnWeekly}':
+                          target_backup_vault_arn:
+                            "@@assign": !Ref pCentralBackupVaultArn
+                          lifecycle:
+                            delete_after_days:
+                              "@@assign": !Ref WeeklyRetentionDays
               backup_plan_tags:
                 project:
                   tag_key:
@@ -344,14 +354,18 @@ Resources:
                       tag_value:
                         "@@assign": !Ref pTagValue
                   copy_actions:
-                    <Replace with value from pCentralBackupVaultArn>:
-                      target_backup_vault_arn:
-                        "@@assign": !Ref pCentralBackupVaultArn
-                      lifecycle:
-                        move_to_cold_storage_after_days:
-                          "@@assign": !Ref ColdStorageAfterDays
-                        delete_after_days:
-                          "@@assign": !Ref MonthlyRetentionDays
+                    # Key/value dinamicos (AWS::LanguageExtensions / Fn::ForEach) desde el ARN deterministico.
+                    'Fn::ForEach::CopyMonthly':
+                      - ArnMonthly
+                      - - !Ref pCentralBackupVaultArn
+                      - '${ArnMonthly}':
+                          target_backup_vault_arn:
+                            "@@assign": !Ref pCentralBackupVaultArn
+                          lifecycle:
+                            move_to_cold_storage_after_days:
+                              "@@assign": !Ref ColdStorageAfterDays
+                            delete_after_days:
+                              "@@assign": !Ref MonthlyRetentionDays
               backup_plan_tags:
                 project:
                   tag_key:
@@ -423,14 +437,18 @@ Resources:
                       tag_value:
                         "@@assign": !Ref pTagValue
                   copy_actions:
-                    <Replace with value from pCentralBackupVaultArn>:
-                      target_backup_vault_arn:
-                        "@@assign": !Ref pCentralBackupVaultArn
-                      lifecycle:
-                        move_to_cold_storage_after_days:
-                          "@@assign": !Ref ColdStorageAfterDays
-                        delete_after_days:
-                          "@@assign": !Ref AnnualRetentionDays
+                    # Key/value dinamicos (AWS::LanguageExtensions / Fn::ForEach) desde el ARN deterministico.
+                    'Fn::ForEach::CopyCompliance':
+                      - ArnCompliance
+                      - - !Ref pCentralBackupVaultArn
+                      - '${ArnCompliance}':
+                          target_backup_vault_arn:
+                            "@@assign": !Ref pCentralBackupVaultArn
+                          lifecycle:
+                            move_to_cold_storage_after_days:
+                              "@@assign": !Ref ColdStorageAfterDays
+                            delete_after_days:
+                              "@@assign": !Ref AnnualRetentionDays
               backup_plan_tags:
                 project:
                   tag_key:

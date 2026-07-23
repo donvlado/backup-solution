@@ -10,3 +10,8 @@
 # Local scan artifacts
 FAILED
 *.log
+
+# Copia de trabajo con valores reales de Molinos (infra del cliente) — NO commitear
+README-EXECUTE-MOLINOS.md
+README-EXECUTE-MOLINOS-PS.md
+org-resource-policy-merged-molinos.json
