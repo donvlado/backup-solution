@@ -155,7 +155,7 @@ aws cloudformation deploy \
     OperationalTagKey=backup OperationalTagValue=daily \
     ComplianceTagKey=data-class ComplianceTagValue=regulated \
     DeployConfigurationRecorder=yes DeployReportFeature=yes \
-    BusinessUnit=<bu> CostCenter=<cc> Environment=<env> ApplicationOwner=<owner> Application=<app>
+    CostCenter=<cc> Environment=<env> ApplicationOwner=<owner> Application=<app>
 ```
 > Los parámetros obligatorios (sin default) son: `GitHubUsername`, `CodeConnectionArn`, `OrgId`,
 > `OrgMgmtAcctId`, `SolutionHomeOrgUnit`, `TargetGlobalRegion`, `TargetRegions`, `TargetOUs`,
@@ -167,8 +167,10 @@ aws cloudformation deploy \
 > **Nota `DeployConfigurationRecorder`:** el ejemplo usa `yes`, pero si la cuenta member ya tiene un Config
 > recorder (p. ej. Control Tower) hay que ponerlo en **`no`** (ver Prerrequisitos) — si no, el stackset falla.
 >
-> **Valores enum sensibles** (validados en deploy): `Environment` acepta `development|qa|production`
-> (minúsculas); `BusinessUnit` acepta `Marketing|Engineering|R&D`.
+> **Valores enum sensibles** (validados por CloudFormation en el deploy): `Environment` acepta
+> `prod|stg|dev|sbx|qa` (alineado al tag policy de la organización). El template no define `BusinessUnit`
+> (no forma parte del tag policy); no lo pases en `--parameter-overrides`. Las tag keys aplicadas son las
+> del policy: `environment`, `application`, `cost-center`, `owner`.
 
 ---
 

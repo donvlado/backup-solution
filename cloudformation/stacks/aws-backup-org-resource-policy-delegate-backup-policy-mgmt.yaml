@@ -19,17 +19,6 @@ Parameters:
       The AWS Organizations root ID starts with r-, followed by alphanumeric characters and hyphens, with a total length of 4 to 32 characters.
 
   # Parameters for tagging
-  BusinessUnit:
-    Description: Business Unit Name
-    Type: String
-    MinLength: '1'
-    MaxLength: '255'
-    AllowedValues:
-      - Marketing
-      - Engineering
-      - R&D
-    ConstraintDescription: Must be a valid business unit
-    Default: Engineering
   CostCenter:
     Description: Cost Center for AWS Services
     Type: String
@@ -40,11 +29,13 @@ Parameters:
     Description: Environment
     Type: String
     AllowedValues:
-      - Development
-      - QA
-      - Production
+      - prod
+      - stg
+      - dev
+      - sbx
+      - qa
     ConstraintDescription: Must be a valid environment.
-    Default: Development
+    Default: prod
   ApplicationOwner:
     Description: Email address of application owner
     Type: String
@@ -115,13 +106,11 @@ Resources:
                 organizations:PolicyType: BACKUP_POLICY
 
       Tags:
-        - Key: Application
+        - Key: application
           Value: !Ref Application
-        - Key: BusinessUnit
-          Value: !Ref BusinessUnit
-        - Key: CostCenter
+        - Key: cost-center
           Value: !Ref CostCenter
-        - Key: Environment
+        - Key: environment
           Value: !Ref Environment
-        - Key: ApplicationOwner
+        - Key: owner
           Value: !Ref ApplicationOwner

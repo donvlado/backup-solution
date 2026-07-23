@@ -36,17 +36,6 @@ Parameters:
   CommitId:
     Description: The commit id for the change
     Type: String
-  BusinessUnit:
-    Description: Business Unit Name
-    Type: String
-    MinLength: '1'
-    MaxLength: '255'
-    AllowedValues:
-      - Marketing
-      - Engineering
-      - R&D
-    ConstraintDescription: Must be a valid business unit
-    Default: Engineering
   CostCenter:
     Description: Cost Center for AWS Services
     Type: String
@@ -57,11 +46,13 @@ Parameters:
     Description: Environment
     Type: String
     AllowedValues:
-      - Development
-      - QA
-      - Production
+      - prod
+      - stg
+      - dev
+      - sbx
+      - qa
     ConstraintDescription: Must be a valid environment.
-    Default: Development
+    Default: prod
   ApplicationOwner:
     Description: Email address of application owner
     Type: String
@@ -98,17 +89,15 @@ Resources:
         DestinationBucketName: !Ref rReportAccessLogsBucket
         LogFilePrefix: report-bucket/
       Tags:
-        - Key: Application
+        - Key: application
           Value: !Ref Application
         - Key: CommitId
           Value: !Ref CommitId
-        - Key: BusinessUnit
-          Value: !Ref BusinessUnit
-        - Key: CostCenter
+        - Key: cost-center
           Value: !Ref CostCenter
-        - Key: Environment
+        - Key: environment
           Value: !Ref Environment
-        - Key: ApplicationOwner
+        - Key: owner
           Value: !Ref ApplicationOwner
 
   rReportAccessLogsBucket:
@@ -136,15 +125,13 @@ Resources:
           Status: Enabled
           ExpirationInDays: '365'
       Tags:
-        - Key: Application
+        - Key: application
           Value: !Ref Application
-        - Key: BusinessUnit
-          Value: !Ref BusinessUnit
-        - Key: CostCenter
+        - Key: cost-center
           Value: !Ref CostCenter
-        - Key: Environment
+        - Key: environment
           Value: !Ref Environment
-        - Key: ApplicationOwner
+        - Key: owner
           Value: !Ref ApplicationOwner
 
   rReportAccessLogsBucketPolicy:
@@ -211,17 +198,15 @@ Resources:
         - "*"
         OrganizationUnits: !Ref OrganizationUnits
       ReportPlanTags:
-        - Key: Application
+        - Key: application
           Value: !Ref Application
         - Key: CommitId
           Value: !Ref CommitId
-        - Key: BusinessUnit
-          Value: !Ref BusinessUnit
-        - Key: CostCenter
+        - Key: cost-center
           Value: !Ref CostCenter
-        - Key: Environment
+        - Key: environment
           Value: !Ref Environment
-        - Key: ApplicationOwner
+        - Key: owner
           Value: !Ref ApplicationOwner
 
   ControlComplianceReportPlan:
@@ -242,17 +227,15 @@ Resources:
         - "*"
         OrganizationUnits: !Ref OrganizationUnits
       ReportPlanTags:
-        - Key: Application
+        - Key: application
           Value: !Ref Application
         - Key: CommitId
           Value: !Ref CommitId
-        - Key: BusinessUnit
-          Value: !Ref BusinessUnit
-        - Key: CostCenter
+        - Key: cost-center
           Value: !Ref CostCenter
-        - Key: Environment
+        - Key: environment
           Value: !Ref Environment
-        - Key: ApplicationOwner
+        - Key: owner
           Value: !Ref ApplicationOwner
 
   BackupJobReportPlan:
@@ -273,17 +256,15 @@ Resources:
         - "*"
         OrganizationUnits: !Ref OrganizationUnits
       ReportPlanTags:
-        - Key: Application
+        - Key: application
           Value: !Ref Application
         - Key: CommitId
           Value: !Ref CommitId
-        - Key: BusinessUnit
-          Value: !Ref BusinessUnit
-        - Key: CostCenter
+        - Key: cost-center
           Value: !Ref CostCenter
-        - Key: Environment
+        - Key: environment
           Value: !Ref Environment
-        - Key: ApplicationOwner
+        - Key: owner
           Value: !Ref ApplicationOwner
 
   CopyJobReportPlan:
@@ -304,17 +285,15 @@ Resources:
         - "*"
         OrganizationUnits: !Ref OrganizationUnits
       ReportPlanTags:
-        - Key: Application
+        - Key: application
           Value: !Ref Application
         - Key: CommitId
           Value: !Ref CommitId
-        - Key: BusinessUnit
-          Value: !Ref BusinessUnit
-        - Key: CostCenter
+        - Key: cost-center
           Value: !Ref CostCenter
-        - Key: Environment
+        - Key: environment
           Value: !Ref Environment
-        - Key: ApplicationOwner
+        - Key: owner
           Value: !Ref ApplicationOwner
 
   RestoreJobReportPlan:
@@ -335,16 +314,14 @@ Resources:
         - "*"
         OrganizationUnits: !Ref OrganizationUnits
       ReportPlanTags:
-        - Key: Application
+        - Key: application
           Value: !Ref Application
         - Key: CommitId
           Value: !Ref CommitId
-        - Key: BusinessUnit
-          Value: !Ref BusinessUnit
-        - Key: CostCenter
+        - Key: cost-center
           Value: !Ref CostCenter
-        - Key: Environment
+        - Key: environment
           Value: !Ref Environment
-        - Key: ApplicationOwner
+        - Key: owner
           Value: !Ref ApplicationOwner
 
