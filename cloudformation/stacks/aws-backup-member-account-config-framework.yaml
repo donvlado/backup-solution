@@ -53,17 +53,6 @@ Parameters:
   CommitId:
     Description: The commit id for the change
     Type: String
-  BusinessUnit:
-    Description: Business Unit Name
-    Type: String
-    MinLength: '1'
-    MaxLength: '255'
-    AllowedValues:
-    - Marketing
-    - Engineering
-    - R&D
-    ConstraintDescription: Must be a valid business unit
-    Default: Engineering
   CostCenter:
     Description: Cost Center for AWS Services
     Type: String
@@ -74,11 +63,13 @@ Parameters:
     Description: Environment
     Type: String
     AllowedValues:
-    - Development
-    - QA
-    - Production
+    - prod
+    - stg
+    - dev
+    - sbx
+    - qa
     ConstraintDescription: Must be a valid environment.
-    Default: Development
+    Default: prod
   ApplicationOwner:
     Description: Email address of application owner
     Type: String
@@ -122,17 +113,15 @@ Resources:
         DestinationBucketName: !Ref rConfigAccessLogsBucket
         LogFilePrefix: config-bucket/
       Tags:
-      - Key: Application
+      - Key: application
         Value: !Ref Application
       - Key: CommitId
         Value: !Ref CommitId
-      - Key: BusinessUnit
-        Value: !Ref BusinessUnit
-      - Key: CostCenter
+      - Key: cost-center
         Value: !Ref CostCenter
-      - Key: Environment
+      - Key: environment
         Value: !Ref Environment
-      - Key: ApplicationOwner
+      - Key: owner
         Value: !Ref ApplicationOwner
 
   rConfigAccessLogsBucket:
@@ -161,15 +150,13 @@ Resources:
           Status: Enabled
           ExpirationInDays: '365'
       Tags:
-      - Key: Application
+      - Key: application
         Value: !Ref Application
-      - Key: BusinessUnit
-        Value: !Ref BusinessUnit
-      - Key: CostCenter
+      - Key: cost-center
         Value: !Ref CostCenter
-      - Key: Environment
+      - Key: environment
         Value: !Ref Environment
-      - Key: ApplicationOwner
+      - Key: owner
         Value: !Ref ApplicationOwner
 
   rConfigAccessLogsBucketPolicy:
@@ -355,15 +342,13 @@ Resources:
             ParameterValue: '720'
         - !Ref "AWS::NoValue"
       FrameworkTags:
-      - Key: Application
+      - Key: application
         Value: !Ref Application
       - Key: CommitId
         Value: !Ref CommitId
-      - Key: BusinessUnit
-        Value: !Ref BusinessUnit
-      - Key: CostCenter
+      - Key: cost-center
         Value: !Ref CostCenter
-      - Key: Environment
+      - Key: environment
         Value: !Ref Environment
-      - Key: ApplicationOwner
+      - Key: owner
         Value: !Ref ApplicationOwner

@@ -19,17 +19,6 @@ Parameters:
   CommitId:
     Description: The commit id for the change
     Type: String
-  BusinessUnit:
-    Description: Business Unit Name
-    Type: String
-    MinLength: '1'
-    MaxLength: '255'
-    AllowedValues:
-      - Marketing
-      - Engineering
-      - R&D
-    ConstraintDescription: Must be a valid business unit
-    Default:  Engineering
   CostCenter:
     Description: Cost Center for AWS Services
     Type: String
@@ -40,11 +29,13 @@ Parameters:
     Description: Environment
     Type: String
     AllowedValues:
-      - Development
-      - QA
-      - Production
+      - prod
+      - stg
+      - dev
+      - sbx
+      - qa
     ConstraintDescription: Must be a valid environment.
-    Default:  Development
+    Default: prod
   ApplicationOwner:
     Description: Email address of application owner
     Type: String
@@ -115,17 +106,15 @@ Resources:
               ForAnyValue:StringLike:
                 aws:PrincipalOrgPaths: !Sub "${pOrganizationId}/*"
       Tags:
-        - Key: BusinessUnit
-          Value: !Ref BusinessUnit
         - Key: CommitId
           Value: !Ref CommitId
-        - Key: CostCenter
+        - Key: cost-center
           Value: !Ref CostCenter
-        - Key: ApplicationOwner
+        - Key: owner
           Value: !Ref ApplicationOwner
-        - Key: Application
+        - Key: application
           Value: !Ref Application
-        - Key: Environment
+        - Key: environment
           Value: !Ref Environment
 
   rCentralAccountBackupKeyAlias:
@@ -169,17 +158,15 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup
         - arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores
       Tags:
-        - Key: BusinessUnit
-          Value: !Ref BusinessUnit
         - Key: CommitId
           Value: !Ref CommitId
-        - Key: CostCenter
+        - Key: cost-center
           Value: !Ref CostCenter
-        - Key: ApplicationOwner
+        - Key: owner
           Value: !Ref ApplicationOwner
-        - Key: Application
+        - Key: application
           Value: !Ref Application
-        - Key: Environment
+        - Key: environment
           Value: !Ref Environment
 
 Outputs:

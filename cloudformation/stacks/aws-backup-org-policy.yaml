@@ -118,17 +118,6 @@ Parameters:
   CommitId:
     Description: The commit id for the change
     Type: String
-  BusinessUnit:
-    Description: Business Unit Name
-    Type: String
-    MinLength: '1'
-    MaxLength: '255'
-    AllowedValues:
-    - Marketing
-    - Engineering
-    - R&D
-    ConstraintDescription: Must be a valid business unit
-    Default: Engineering
   CostCenter:
     Description: Cost Center for AWS Services
     Type: String
@@ -139,11 +128,13 @@ Parameters:
     Description: Environment
     Type: String
     AllowedValues:
-    - Development
-    - QA
-    - Production
+    - prod
+    - stg
+    - dev
+    - sbx
+    - qa
     ConstraintDescription: Must be a valid environment.
-    Default: Development
+    Default: prod
   ApplicationOwner:
     Description: Email address of application owner
     Type: String
@@ -198,13 +189,19 @@ Resources:
                       tag_value:
                         "@@assign": !Ref pTagValue
                   copy_actions:
-                    # La key debe ser identica al ARN destino (requisito de sintaxis de Backup Policy).
-                    <Replace with value from pCentralBackupVaultArn>:
-                      target_backup_vault_arn:
-                        "@@assign": !Ref pCentralBackupVaultArn
-                      lifecycle:
-                        delete_after_days:
-                          "@@assign": !Ref DailyRetentionDays
+                    # Key y value construidos dinamicamente (AWS::LanguageExtensions / Fn::ForEach)
+                    # desde el ARN deterministico del central vault (SSM /backup/central-vault-arn):
+                    # elimina la edicion manual del placeholder y el gate DeployBackupOrgPolicy.
+                    # La key del mapa debe ser identica al ARN destino (requisito de AWS Backup Policy).
+                    'Fn::ForEach::CopyDaily':
+                      - ArnDaily
+                      - - !Ref pCentralBackupVaultArn
+                      - '${ArnDaily}':
+                          target_backup_vault_arn:
+                            "@@assign": !Ref pCentralBackupVaultArn
+                          lifecycle:
+                            delete_after_days:
+                              "@@assign": !Ref DailyRetentionDays
               backup_plan_tags:
                 project:
                   tag_key:
@@ -224,17 +221,15 @@ Resources:
                       "@@assign":
                       - "daily"
       Tags:
-      - Key: Application
+      - Key: application
         Value: !Ref Application
       - Key: CommitId
         Value: !Ref CommitId
-      - Key: BusinessUnit
-        Value: !Ref BusinessUnit
-      - Key: CostCenter
+      - Key: cost-center
         Value: !Ref CostCenter
-      - Key: Environment
+      - Key: environment
         Value: !Ref Environment
-      - Key: ApplicationOwner
+      - Key: owner
         Value: !Ref ApplicationOwner
 
   # ---- WEEKLY (warm, 90d) -> backup=weekly ----
@@ -270,12 +265,16 @@ Resources:
                       tag_value:
                         "@@assign": !Ref pTagValue
                   copy_actions:
-                    <Replace with value from pCentralBackupVaultArn>:
-                      target_backup_vault_arn:
-                        "@@assign": !Ref pCentralBackupVaultArn
-                      lifecycle:
-                        delete_after_days:
-                          "@@assign": !Ref WeeklyRetentionDays
+                    # Key/value dinamicos (AWS::LanguageExtensions / Fn::ForEach) desde el ARN deterministico.
+                    'Fn::ForEach::CopyWeekly':
+                      - ArnWeekly
+                      - - !Ref pCentralBackupVaultArn
+                      - '${ArnWeekly}':
+                          target_backup_vault_arn:
+                            "@@assign": !Ref pCentralBackupVaultArn
+                          lifecycle:
+                            delete_after_days:
+                              "@@assign": !Ref WeeklyRetentionDays
               backup_plan_tags:
                 project:
                   tag_key:
@@ -295,17 +294,15 @@ Resources:
                       "@@assign":
                       - "weekly"
       Tags:
-      - Key: Application
+      - Key: application
         Value: !Ref Application
       - Key: CommitId
         Value: !Ref CommitId
-      - Key: BusinessUnit
-        Value: !Ref BusinessUnit
-      - Key: CostCenter
+      - Key: cost-center
         Value: !Ref CostCenter
-      - Key: Environment
+      - Key: environment
         Value: !Ref Environment
-      - Key: ApplicationOwner
+      - Key: owner
         Value: !Ref ApplicationOwner
 
   # ---- MONTHLY (cold a ColdStorageAfterDays, 365d) -> backup=monthly ----
@@ -344,14 +341,18 @@ Resources:
                       tag_value:
                         "@@assign": !Ref pTagValue
                   copy_actions:
-                    <Replace with value from pCentralBackupVaultArn>:
-                      target_backup_vault_arn:
-                        "@@assign": !Ref pCentralBackupVaultArn
-                      lifecycle:
-                        move_to_cold_storage_after_days:
-                          "@@assign": !Ref ColdStorageAfterDays
-                        delete_after_days:
-                          "@@assign": !Ref MonthlyRetentionDays
+                    # Key/value dinamicos (AWS::LanguageExtensions / Fn::ForEach) desde el ARN deterministico.
+                    'Fn::ForEach::CopyMonthly':
+                      - ArnMonthly
+                      - - !Ref pCentralBackupVaultArn
+                      - '${ArnMonthly}':
+                          target_backup_vault_arn:
+                            "@@assign": !Ref pCentralBackupVaultArn
+                          lifecycle:
+                            move_to_cold_storage_after_days:
+                              "@@assign": !Ref ColdStorageAfterDays
+                            delete_after_days:
+                              "@@assign": !Ref MonthlyRetentionDays
               backup_plan_tags:
                 project:
                   tag_key:
@@ -371,17 +372,15 @@ Resources:
                       "@@assign":
                       - "monthly"
       Tags:
-      - Key: Application
+      - Key: application
         Value: !Ref Application
       - Key: CommitId
         Value: !Ref CommitId
-      - Key: BusinessUnit
-        Value: !Ref BusinessUnit
-      - Key: CostCenter
+      - Key: cost-center
         Value: !Ref CostCenter
-      - Key: Environment
+      - Key: environment
         Value: !Ref Environment
-      - Key: ApplicationOwner
+      - Key: owner
         Value: !Ref ApplicationOwner
 
   # ==========================================================================
@@ -423,14 +422,18 @@ Resources:
                       tag_value:
                         "@@assign": !Ref pTagValue
                   copy_actions:
-                    <Replace with value from pCentralBackupVaultArn>:
-                      target_backup_vault_arn:
-                        "@@assign": !Ref pCentralBackupVaultArn
-                      lifecycle:
-                        move_to_cold_storage_after_days:
-                          "@@assign": !Ref ColdStorageAfterDays
-                        delete_after_days:
-                          "@@assign": !Ref AnnualRetentionDays
+                    # Key/value dinamicos (AWS::LanguageExtensions / Fn::ForEach) desde el ARN deterministico.
+                    'Fn::ForEach::CopyCompliance':
+                      - ArnCompliance
+                      - - !Ref pCentralBackupVaultArn
+                      - '${ArnCompliance}':
+                          target_backup_vault_arn:
+                            "@@assign": !Ref pCentralBackupVaultArn
+                          lifecycle:
+                            move_to_cold_storage_after_days:
+                              "@@assign": !Ref ColdStorageAfterDays
+                            delete_after_days:
+                              "@@assign": !Ref AnnualRetentionDays
               backup_plan_tags:
                 project:
                   tag_key:
@@ -450,15 +453,13 @@ Resources:
                       "@@assign":
                       - !Ref pComplianceTagValue
       Tags:
-      - Key: Application
+      - Key: application
         Value: !Ref Application
       - Key: CommitId
         Value: !Ref CommitId
-      - Key: BusinessUnit
-        Value: !Ref BusinessUnit
-      - Key: CostCenter
+      - Key: cost-center
         Value: !Ref CostCenter
-      - Key: Environment
+      - Key: environment
         Value: !Ref Environment
-      - Key: ApplicationOwner
+      - Key: owner
         Value: !Ref ApplicationOwner

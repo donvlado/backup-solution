@@ -45,7 +45,6 @@ Metadata:
     - Label:
         default: "Customer Specific Tags"
       Parameters:
-      - BusinessUnit
       - CostCenter
       - Environment
       - ApplicationOwner
@@ -104,8 +103,6 @@ Metadata:
         default: "AWS Backup Central Account ID"
       AWSBackupCentralAccountRegion:
         default: "AWS Backup Central Account Region"
-      BusinessUnit:
-        default: "Business Unit"
       CostCenter:
         default: "Cost Center"
       Environment:
@@ -282,17 +279,6 @@ Parameters:
     Type: String
     Default: regulated
 
-  BusinessUnit:
-    Description: Business Unit Name
-    Type: String
-    MinLength: '1'
-    MaxLength: '255'
-    AllowedValues:
-    - Marketing
-    - Engineering
-    - R&D
-    ConstraintDescription: Must be a valid business unit
-    Default: Engineering
   CostCenter:
     Description: Cost Center for AWS Services
     Type: String
@@ -303,11 +289,13 @@ Parameters:
     Description: Environment
     Type: String
     AllowedValues:
-    - development
+    - prod
+    - stg
+    - dev
+    - sbx
     - qa
-    - production
     ConstraintDescription: Must be a valid environment
-    Default: development
+    Default: prod
   ApplicationOwner:
     Description: Email address of the application owner
     Type: String
@@ -451,11 +439,10 @@ Resources:
       Type: String
       Value: !Ref OrgId
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupBucket:
     Type: AWS::SSM::Parameter
@@ -465,11 +452,10 @@ Resources:
       Type: String
       Value: !Ref DeploymentBucket
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupSolutionOrgUnit:
     Type: AWS::SSM::Parameter
@@ -479,11 +465,10 @@ Resources:
       Type: String
       Value: !Ref SolutionHomeOrgUnit
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupCentralAccountOUSSM:
     Type: AWS::SSM::Parameter
@@ -493,11 +478,10 @@ Resources:
       Type: String
       Value: !Ref AWSBackupCentralAccountOU
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupCentralAccountIdSSM:
     Type: AWS::SSM::Parameter
@@ -507,11 +491,10 @@ Resources:
       Type: String
       Value: !Ref AWSBackupCentralAccountId
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupCentralAccountRegionSSM:
     Type: AWS::SSM::Parameter
@@ -521,11 +504,10 @@ Resources:
       Type: String
       Value: !Ref AWSBackupCentralAccountRegion
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupCentralVaultSSM:
     Type: AWS::SSM::Parameter
@@ -535,11 +517,10 @@ Resources:
       Type: String
       Value: !Sub "arn:aws:backup:${AWSBackupCentralAccountRegion}:${AWSBackupCentralAccountId}:backup-vault:AWSBackupSolutionCentralVault"
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   # --- SSM Parameters del Backup Plan (consumidos por aws-backup-org-policy.yaml) ---
   DailyBackupScheduleParameter:
@@ -550,11 +531,10 @@ Resources:
       Type: String
       Value: !Ref DailyBackupSchedule
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   WeeklyBackupScheduleParameter:
     Type: AWS::SSM::Parameter
@@ -564,11 +544,10 @@ Resources:
       Type: String
       Value: !Ref WeeklyBackupSchedule
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   MonthlyBackupScheduleParameter:
     Type: AWS::SSM::Parameter
@@ -578,11 +557,10 @@ Resources:
       Type: String
       Value: !Ref MonthlyBackupSchedule
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AnnualBackupScheduleParameter:
     Type: AWS::SSM::Parameter
@@ -592,11 +570,10 @@ Resources:
       Type: String
       Value: !Ref AnnualBackupSchedule
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   DailyRetentionDaysParameter:
     Type: AWS::SSM::Parameter
@@ -606,11 +583,10 @@ Resources:
       Type: String
       Value: !Ref DailyRetentionDays
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   WeeklyRetentionDaysParameter:
     Type: AWS::SSM::Parameter
@@ -620,11 +596,10 @@ Resources:
       Type: String
       Value: !Ref WeeklyRetentionDays
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   MonthlyRetentionDaysParameter:
     Type: AWS::SSM::Parameter
@@ -634,11 +609,10 @@ Resources:
       Type: String
       Value: !Ref MonthlyRetentionDays
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AnnualRetentionDaysParameter:
     Type: AWS::SSM::Parameter
@@ -648,11 +622,10 @@ Resources:
       Type: String
       Value: !Ref AnnualRetentionDays
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   ColdStorageAfterDaysParameter:
     Type: AWS::SSM::Parameter
@@ -662,11 +635,10 @@ Resources:
       Type: String
       Value: !Ref ColdStorageAfterDays
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   OperationalTagKeyParameter:
     Type: AWS::SSM::Parameter
@@ -676,11 +648,10 @@ Resources:
       Type: String
       Value: !Ref OperationalTagKey
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   OperationalTagValueParameter:
     Type: AWS::SSM::Parameter
@@ -690,11 +661,10 @@ Resources:
       Type: String
       Value: !Ref OperationalTagValue
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   ComplianceTagKeyParameter:
     Type: AWS::SSM::Parameter
@@ -704,11 +674,10 @@ Resources:
       Type: String
       Value: !Ref ComplianceTagKey
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   ComplianceTagValueParameter:
     Type: AWS::SSM::Parameter
@@ -718,11 +687,10 @@ Resources:
       Type: String
       Value: !Ref ComplianceTagValue
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupTargetGlobalRegion:
     Type: AWS::SSM::Parameter
@@ -732,11 +700,10 @@ Resources:
       Type: String
       Value: !Ref AWS::Region
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupTargetRegions:
     Type: AWS::SSM::Parameter
@@ -746,11 +713,10 @@ Resources:
       Type: StringList
       Value: !Ref TargetRegions
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupTargetOUs:
     Type: AWS::SSM::Parameter
@@ -760,11 +726,10 @@ Resources:
       Type: StringList
       Value: !Ref TargetOUs
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupFrameworkControl1:
     Type: AWS::SSM::Parameter
@@ -774,11 +739,10 @@ Resources:
       Type: String
       Value: !Ref DeployControl1
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupFrameworkControl2:
     Type: AWS::SSM::Parameter
@@ -788,11 +752,10 @@ Resources:
       Type: String
       Value: !Ref DeployControl2
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupFrameworkControl3:
     Type: AWS::SSM::Parameter
@@ -802,11 +765,10 @@ Resources:
       Type: String
       Value: !Ref DeployControl3
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupFrameworkControl4:
     Type: AWS::SSM::Parameter
@@ -816,11 +778,10 @@ Resources:
       Type: String
       Value: !Ref DeployControl4
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupFrameworkControl5:
     Type: AWS::SSM::Parameter
@@ -830,11 +791,10 @@ Resources:
       Type: String
       Value: !Ref DeployControl5
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupFrameworkControl6:
     Type: AWS::SSM::Parameter
@@ -844,11 +804,10 @@ Resources:
       Type: String
       Value: !Ref DeployControl6
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupFrameworkControl7:
     Type: AWS::SSM::Parameter
@@ -858,11 +817,10 @@ Resources:
       Type: String
       Value: !Ref DeployControl7
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupFrameworkControl8:
     Type: AWS::SSM::Parameter
@@ -872,11 +830,10 @@ Resources:
       Type: String
       Value: !Ref DeployControl8
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupFrameworkControl9:
     Type: AWS::SSM::Parameter
@@ -886,11 +843,10 @@ Resources:
       Type: String
       Value: !Ref DeployControl9
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   AWSBackupFrameworkControl10:
     Type: AWS::SSM::Parameter
@@ -900,11 +856,10 @@ Resources:
       Type: String
       Value: !Ref DeployControl10
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   ResourceComplianceReportPlan:
     Condition: DeployReportFeatureCondition
@@ -915,11 +870,10 @@ Resources:
       Type: String
       Value: !Ref DeployResourceComplianceReportPlan
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   ControlComplianceReportPlan:
     Condition: DeployReportFeatureCondition
@@ -930,11 +884,10 @@ Resources:
       Type: String
       Value: !Ref DeployControlComplianceReportPlan
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   BackupJobReportPlan:
     Condition: DeployReportFeatureCondition
@@ -945,11 +898,10 @@ Resources:
       Type: String
       Value: !Ref DeployBackupJobReportPlan
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   CopyJobReportPlan:
     Condition: DeployReportFeatureCondition
@@ -960,11 +912,10 @@ Resources:
       Type: String
       Value: !Ref DeployCopyJobReportPlan
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   RestoreJobReportPlan:
     Condition: DeployReportFeatureCondition
@@ -975,11 +926,10 @@ Resources:
       Type: String
       Value: !Ref DeployRestoreJobReportPlan
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   ConfigurationRecorder:
     Type: AWS::SSM::Parameter
@@ -989,11 +939,10 @@ Resources:
       Type: String
       Value: !Ref DeployConfigurationRecorder
       Tags:
-        Application: !Ref Application
-        BusinessUnit: !Ref BusinessUnit
-        CostCenter: !Ref CostCenter
-        Environment: !Ref Environment
-        ApplicationOwner: !Ref ApplicationOwner
+        application: !Ref Application
+        cost-center: !Ref CostCenter
+        environment: !Ref Environment
+        owner: !Ref ApplicationOwner
 
   DeploymentBucket:
     Type: "AWS::S3::Bucket"
@@ -1106,15 +1055,13 @@ Resources:
           Status: Enabled
           ExpirationInDays: '365'
       Tags:
-      - Key: Application
+      - Key: application
         Value: !Ref Application
-      - Key: BusinessUnit
-        Value: !Ref BusinessUnit
-      - Key: CostCenter
+      - Key: cost-center
         Value: !Ref CostCenter
-      - Key: Environment
+      - Key: environment
         Value: !Ref Environment
-      - Key: ApplicationOwner
+      - Key: owner
         Value: !Ref ApplicationOwner
 
   AccessLogsBucketPolicy:
@@ -1164,15 +1111,13 @@ Resources:
           Action: 'kms:*'
           Resource: '*'
       Tags:
-      - Key: Application
+      - Key: application
         Value: !Ref Application
-      - Key: BusinessUnit
-        Value: !Ref BusinessUnit
-      - Key: CostCenter
+      - Key: cost-center
         Value: !Ref CostCenter
-      - Key: Environment
+      - Key: environment
         Value: !Ref Environment
-      - Key: ApplicationOwner
+      - Key: owner
         Value: !Ref ApplicationOwner
 
   CreateAMIKmsKeyAlias:
@@ -1491,15 +1436,13 @@ Resources:
             Resource: !Ref CodeConnectionArn
 
       Tags:
-      - Key: Application
+      - Key: application
         Value: !Ref Application
-      - Key: BusinessUnit
-        Value: !Ref BusinessUnit
-      - Key: CostCenter
+      - Key: cost-center
         Value: !Ref CostCenter
-      - Key: Environment
+      - Key: environment
         Value: !Ref Environment
-      - Key: ApplicationOwner
+      - Key: owner
         Value: !Ref ApplicationOwner
 
   CodeBuildValidateTemplates:
@@ -1523,15 +1466,13 @@ Resources:
         BuildSpec: codebuild/ValidateTemplates/buildspec-cfnnag.yml
       TimeoutInMinutes: 10
       Tags:
-      - Key: Application
+      - Key: application
         Value: !Ref Application
-      - Key: BusinessUnit
-        Value: !Ref BusinessUnit
-      - Key: CostCenter
+      - Key: cost-center
         Value: !Ref CostCenter
-      - Key: Environment
+      - Key: environment
         Value: !Ref Environment
-      - Key: ApplicationOwner
+      - Key: owner
         Value: !Ref ApplicationOwner
 
   CodeBuildRole:
@@ -1580,15 +1521,13 @@ Resources:
             Resource: !GetAtt CodePipelineKMSKey.Arn
             Effect: Allow
       Tags:
-      - Key: Application
+      - Key: application
         Value: !Ref Application
-      - Key: BusinessUnit
-        Value: !Ref BusinessUnit
-      - Key: CostCenter
+      - Key: cost-center
         Value: !Ref CostCenter
-      - Key: Environment
+      - Key: environment
         Value: !Ref Environment
-      - Key: ApplicationOwner
+      - Key: owner
         Value: !Ref ApplicationOwner
 
   CloudFormationRole:

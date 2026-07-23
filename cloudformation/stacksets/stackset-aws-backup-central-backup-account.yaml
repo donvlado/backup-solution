@@ -40,17 +40,6 @@ Parameters:
   CommitId:
     Description: The commit id for the change
     Type: String
-  BusinessUnit:
-    Description: Business Unit Name
-    Type: String
-    MinLength: '1'
-    MaxLength: '255'
-    AllowedValues:
-      - Marketing
-      - Engineering
-      - R&D
-    ConstraintDescription: Must be a valid business unit
-    Default:  Engineering
   CostCenter:
     Description: Cost Center for AWS Services
     Type: String
@@ -61,11 +50,13 @@ Parameters:
     Description: Environment
     Type: String
     AllowedValues:
-      - Development
-      - QA
-      - Production
+      - prod
+      - stg
+      - dev
+      - sbx
+      - qa
     ConstraintDescription: Must be a valid environment.
-    Default:  Development
+    Default: prod
   ApplicationOwner:
     Description: Email address of application owner
     Type: String
@@ -119,8 +110,6 @@ Resources:
           ParameterValue: !Ref Application
         - ParameterKey: CommitId
           ParameterValue: !Ref CommitId
-        - ParameterKey: BusinessUnit
-          ParameterValue: !Ref BusinessUnit
         - ParameterKey: CostCenter
           ParameterValue: !Ref CostCenter
         - ParameterKey: Environment
@@ -128,16 +117,14 @@ Resources:
         - ParameterKey: ApplicationOwner
           ParameterValue: !Ref ApplicationOwner
       Tags:
-        - Key: Application
+        - Key: application
           Value: !Ref Application
-        - Key: BusinessUnit
-          Value: !Ref BusinessUnit
         - Key: CommitId
           Value: !Ref CommitId
-        - Key: CostCenter
+        - Key: cost-center
           Value: !Ref CostCenter
-        - Key: Environment
+        - Key: environment
           Value: !Ref Environment
-        - Key: ApplicationOwner
+        - Key: owner
           Value: !Ref ApplicationOwner
 

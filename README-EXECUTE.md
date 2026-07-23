@@ -155,7 +155,7 @@ aws cloudformation deploy \
     OperationalTagKey=backup OperationalTagValue=daily \
     ComplianceTagKey=data-class ComplianceTagValue=regulated \
     DeployConfigurationRecorder=yes DeployReportFeature=yes \
-    BusinessUnit=<bu> CostCenter=<cc> Environment=<env> ApplicationOwner=<owner> Application=<app>
+    CostCenter=<cc> Environment=<env> ApplicationOwner=<owner> Application=<app>
 ```
 > Los parámetros obligatorios (sin default) son: `GitHubUsername`, `CodeConnectionArn`, `OrgId`,
 > `OrgMgmtAcctId`, `SolutionHomeOrgUnit`, `TargetGlobalRegion`, `TargetRegions`, `TargetOUs`,
@@ -167,8 +167,10 @@ aws cloudformation deploy \
 > **Nota `DeployConfigurationRecorder`:** el ejemplo usa `yes`, pero si la cuenta member ya tiene un Config
 > recorder (p. ej. Control Tower) hay que ponerlo en **`no`** (ver Prerrequisitos) — si no, el stackset falla.
 >
-> **Valores enum sensibles** (validados en deploy): `Environment` acepta `development|qa|production`
-> (minúsculas); `BusinessUnit` acepta `Marketing|Engineering|R&D`.
+> **Valores enum sensibles** (validados por CloudFormation en el deploy): `Environment` acepta
+> `prod|stg|dev|sbx|qa` (alineado al tag policy de la organización). El template no define `BusinessUnit`
+> (no forma parte del tag policy); no lo pases en `--parameter-overrides`. Las tag keys aplicadas son las
+> del policy: `environment`, `application`, `cost-center`, `owner`.
 
 ---
 
@@ -182,23 +184,16 @@ aws codepipeline get-pipeline-state --name backup-recovery-aws-backup --profile 
 ```
 
 **Gate del Vault ARN (`DeployBackupOrgPolicy`).** Este stage nace con la transición **deshabilitada**
-(`DisableInboundStageTransitions`) a propósito: la org backup policy necesita el ARN del central vault en
-los `copy_actions`, y por sintaxis de AWS Backup Policy la **key del mapa `copy_actions` debe ser el ARN
-destino** — que CloudFormation no puede templatizar. Pasos en el gate:
-
-1. El SSM `/backup/central-vault-arn` ya trae el ARN determinístico
-   (`arn:aws:backup:<region>:<central-acct>:backup-vault:AWSBackupSolutionCentralVault`) — cubre el *valor*
-   (`target_backup_vault_arn`).
-2. Editar `cloudformation/stacks/aws-backup-org-policy.yaml` y reemplazar el placeholder
-   `<Replace with value from pCentralBackupVaultArn>` (4 lugares: daily/weekly/monthly/annual) por **ese
-   ARN, entrecomillado** (`"arn:aws:backup:...:AWSBackupSolutionCentralVault":`). Commit + push → re-dispara el pipeline.
-3. Habilitar la transición cuando el pipeline vuelva a pausar en el gate:
+(`DisableInboundStageTransitions`) como pausa de control. No requiere edición manual del template: la
+**key** y el **value** del `copy_actions` se construyen automáticamente desde el ARN del central vault en
+el SSM `/backup/central-vault-arn` vía `AWS::LanguageExtensions` (`Fn::ForEach`), en los cuatro planes
+(daily/weekly/monthly/compliance). Único paso operativo: habilitar la transición:
 ```
 aws codepipeline enable-stage-transition --pipeline-name backup-recovery-aws-backup \
   --stage-name DeployBackupOrgPolicy --transition-type Inbound --profile solutionhome --region us-east-1
 ```
-> *Mejora futura (follow-up):* construir key y value del `copy_actions` con `Fn::Sub`/`AWS::LanguageExtensions`
-> desde el ARN determinístico para eliminar la edición manual y el gate.
+> *Opcional:* al no requerir edición manual, la transición deshabilitada puede quitarse del root template
+> para un despliegue sin pausas.
 
 ---
 
@@ -271,15 +266,15 @@ Reemplazar los statements con `Resource:"*"` por la policy generada, y complemen
 ---
 
 ## Notas de seguridad
-- Demo y restore-testing **eliminados** del artifact (no se despliegan).
+- La solución no incluye recursos de demo ni de restore-testing.
 - S3: SSE + PublicAccessBlock + versioning + logging (access-logs bucket dedicado por template).
 - KMS/vault: `aws:PrincipalOrgID`/`PrincipalOrgPaths` (cross-account acotado a la org).
 - Source vía **CodeConnections** (`CodeStarSourceConnection`), sin PAT en el pipeline.
 - Post-deploy: least-privilege del pipeline role vía IAM Access Analyzer (paso H).
 
-## Checklist de requisitos (validado end-to-end en sandbox)
+## Checklist de requisitos
 
-Prerequisitos y gotchas confirmados desplegando la solución completa (backup + copy cross-account):
+Prerequisitos y puntos de atención del despliegue completo (backup + copy cross-account):
 
 1. **Perfiles SSO** por cuenta; re-loguear al expirar (`aws sso login`).
 2. **GitHub owner** de la org para el handshake de CodeConnections (§A).
@@ -288,5 +283,5 @@ Prerequisitos y gotchas confirmados desplegando la solución completa (backup + 
 5. **`--s3-bucket`** en el deploy del root (template >51 KB) (§D).
 6. **Enum case-sensitive**: `Environment` en minúsculas; el resto de toggles `yes`/`no` (entrecomillados en el YAML).
 7. **CodeBuild image** `standard:7.0` (Ruby 3.x) para que `gem install cfn-nag` funcione.
-8. **Gate del Vault ARN**: editar la key de `copy_actions` con el ARN del central vault antes de habilitar la transición (§E).
+8. **Gate del Vault ARN**: la key/value de `copy_actions` se construyen solas (LanguageExtensions/`Fn::ForEach` desde el SSM del ARN) — **sin edición manual**; solo habilitar la transición del stage (§E).
 9. **Deploy role** con permisos S3 de bucket-config (ownership/logging/lifecycle) + backup report-plan (ListTags/ListReportPlans) — ya incluidos en el template.
